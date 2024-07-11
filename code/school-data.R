@@ -25,3 +25,40 @@ ggplot(schools_basic |> filter(Nivel == "Secundario"), aes(Alunos)) +
   xlab("Students")
 
 tm_shape(schools_basic) + tm_dots("Nivel", size = "Alunos")
+
+schools_primary = schools_basic |> 
+  filter(Nivel == "Basico")
+
+# Doesn't work:
+# schools_1_ciclo = read_sf("../internal/escolas-publicas-1-ciclo.geojson")
+
+
+# Census data for Lisbon Metropolitan Area (very detailed geog) -----------
+
+bgri = read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
+
+tm_shape(bgri) + tm_polygons("N_INDIVIDUOS_0_14")
+
+bgri_lisbon = bgri |> 
+  filter(DTMN21 == 1106)
+tm_shape(bgri_lisbon) + tm_polygons()
+
+# Not needed
+# # District and region polygons for continental Portugal
+# # from https://forest-gis.com/shapefiles-de-portugal/
+# # via https://web.archive.org/web/20211121211516/http://mapas.dgterritorio.pt/ATOM-download/CAOP-Cont/Cont_AAD_CAOP2020.zip
+# cont = read_sf("../internal/Cont_AAD_CAOP2020/Cont_AAD_CAOP2020.shp")
+# 
+# tm_shape(cont) + tm_polygons("Concelho")
+# 
+# st_crs(cont)
+# st_crs(bgri)
+# 
+# lisboa = cont |> 
+#   filter(Concelho == "Lisboa")
+# tm_shape(lisboa) + tm_polygons()
+# 
+# bgri_lisboa = bgri[lisboa, ]
+
+tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+  tm_shape(schools_primary) + tm_dots(size = "Alunos")
