@@ -116,3 +116,5 @@ summary(dgeec_totals$Alunos)
 table(dgeec_lisbon$NATUREZA, useNA = "ifany")
 # Privado dependente do estado         Privado independente                      Público 
 # 252                         2415                         2589 
+
+table(dgeec_lisbon$ORIENTAÇÃO, useNA = "ifany")
