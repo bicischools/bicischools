@@ -62,3 +62,57 @@ tm_shape(bgri_lisbon) + tm_polygons()
 
 tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
   tm_shape(schools_primary) + tm_dots(size = "Alunos")
+
+
+# DGEEC school data -------------------------------------------------------
+
+library(readxl)
+dgeec_schools = read_xlsx("../internal/DGEEC_AlunosMatriculados_Continente2122.xlsx")
+
+dgeec_lma = dgeec_schools |> 
+  filter(`NUTS II (2013)` == "Área Metropolitana de Lisboa")
+dgeec_lisbon = dgeec_lma |> 
+  filter(MUNICÍPIO == "Lisboa")
+
+length(unique(dgeec_lisbon$ESCOLA))
+# [1] 390
+
+table(dgeec_lisbon$`CICLO DE ESTUDOS`, useNA = "ifany")
+# 1.º Ciclo 2.º Ciclo 3.º Ciclo      <NA> 
+#   1418       401       705      2732
+
+dgeec_totals = dgeec_lisbon |> 
+  filter(`NÍVEL DE  ENSINO` == "Ensino básico") |> 
+  group_by(ESCOLA, `CICLO DE ESTUDOS`) |> 
+  summarise(
+    Alunos = sum(`NÚMERO DE ALUNOS MATRICULADOS`)
+    )
+
+table(dgeec_totals$`CICLO DE ESTUDOS`, useNA = "ifany")
+# 1.º Ciclo 2.º Ciclo 3.º Ciclo 
+# 190        95       110 
+
+ggplot(dgeec_totals |> filter(`CICLO DE ESTUDOS` == "1.º Ciclo"), aes(Alunos)) + 
+  geom_histogram() +
+  ggtitle("1.º Ciclo, Lisbon City") + 
+  xlab("Students")
+
+ggplot(dgeec_totals |> filter(`CICLO DE ESTUDOS` == "2.º Ciclo"), aes(Alunos)) + 
+  geom_histogram() +
+  ggtitle("2.º Ciclo, Lisbon City") + 
+  xlab("Students")
+
+ggplot(dgeec_totals |> filter(`CICLO DE ESTUDOS` == "3.º Ciclo"), aes(Alunos)) + 
+  geom_histogram() +
+  ggtitle("3.º Ciclo, Lisbon City") + 
+  xlab("Students")
+
+# There are a lot of very small schools. Any school with <100 students will have little chance of bike buses.
+summary(dgeec_totals$Alunos)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 1.0    58.5   129.0   155.0   227.0   743.0 
+
+# Next, use public schools only and see if the schools are larger
+table(dgeec_lisbon$NATUREZA, useNA = "ifany")
+# Privado dependente do estado         Privado independente                      Público 
+# 252                         2415                         2589 
