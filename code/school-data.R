@@ -81,16 +81,25 @@ table(dgeec_lisbon$`CICLO DE ESTUDOS`, useNA = "ifany")
 # 1.º Ciclo 2.º Ciclo 3.º Ciclo      <NA> 
 #   1418       401       705      2732
 
+# We want schools for children only
+table(dgeec_totals$ORIENTAÇÃO, useNA = "ifany")
+# Programas educativos orientados para adultos       Programas educativos orientados para crianças 
+# 271                                                 556 
+# Programas educativos orientados para jovens Programas educativos orientados para jovens/adultos 
+# 4358                                                  71 
+
 dgeec_totals = dgeec_lisbon |> 
-  filter(`NÍVEL DE  ENSINO` == "Ensino básico") |> 
-  group_by(ESCOLA, `CICLO DE ESTUDOS`) |> 
+  filter(`NÍVEL DE  ENSINO` == "Ensino básico",
+         ORIENTAÇÃO == "Programas educativos orientados para jovens"
+         ) |> 
+  group_by(ESCOLA, `CICLO DE ESTUDOS`, ORIENTAÇÃO) |> 
   summarise(
     Alunos = sum(`NÚMERO DE ALUNOS MATRICULADOS`)
     )
 
 table(dgeec_totals$`CICLO DE ESTUDOS`, useNA = "ifany")
 # 1.º Ciclo 2.º Ciclo 3.º Ciclo 
-# 190        95       110 
+# 186        91       104 
 
 ggplot(dgeec_totals |> filter(`CICLO DE ESTUDOS` == "1.º Ciclo"), aes(Alunos)) + 
   geom_histogram() +
@@ -110,11 +119,55 @@ ggplot(dgeec_totals |> filter(`CICLO DE ESTUDOS` == "3.º Ciclo"), aes(Alunos)) 
 # There are a lot of very small schools. Any school with <100 students will have little chance of bike buses.
 summary(dgeec_totals$Alunos)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# 1.0    58.5   129.0   155.0   227.0   743.0 
+# 1.0    63.0   135.0   157.9   229.0   743.0 
 
 # Next, use public schools only and see if the schools are larger
 table(dgeec_lisbon$NATUREZA, useNA = "ifany")
 # Privado dependente do estado         Privado independente                      Público 
 # 252                         2415                         2589 
 
-table(dgeec_lisbon$ORIENTAÇÃO, useNA = "ifany")
+dgeec_public = dgeec_lisbon |> 
+  filter(`NÍVEL DE  ENSINO` == "Ensino básico",
+         ORIENTAÇÃO == "Programas educativos orientados para jovens",
+         NATUREZA == "Público"
+         ) |> 
+  group_by(ESCOLA, `CICLO DE ESTUDOS`, ORIENTAÇÃO) |> 
+  summarise(
+    Alunos = sum(`NÚMERO DE ALUNOS MATRICULADOS`)
+  )
+
+
+table(dgeec_public$`CICLO DE ESTUDOS`, useNA = "ifany")
+# 1.º Ciclo 2.º Ciclo 3.º Ciclo 
+# 89        42        56 
+
+ggplot(dgeec_public |> filter(`CICLO DE ESTUDOS` == "1.º Ciclo"), aes(Alunos)) + 
+  geom_histogram() +
+  ggtitle("1.º Ciclo, Lisbon City") + 
+  xlab("Students")
+
+ggplot(dgeec_public |> filter(`CICLO DE ESTUDOS` == "2.º Ciclo"), aes(Alunos)) + 
+  geom_histogram() +
+  ggtitle("2.º Ciclo, Lisbon City") + 
+  xlab("Students")
+
+ggplot(dgeec_public |> filter(`CICLO DE ESTUDOS` == "3.º Ciclo"), aes(Alunos)) + 
+  geom_histogram() +
+  ggtitle("3.º Ciclo, Lisbon City") + 
+  xlab("Students")
+
+# There are still some tiny schools, but the mean size has increased
+summary(dgeec_public$Alunos)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 3.0   115.0   178.0   193.2   261.0   603.0 
+
+
+# School locations --------------------------------------------------------
+
+# Location data from https://github.com/carrismetropolitana/datasets/blob/latest/facilities/schools/schools.csv
+
+school_geo = read_sf("../internal/schools.csv")
+View(school_geo)
+summary(school_geo$id)
+
+# Join with dgeec data based on school names
