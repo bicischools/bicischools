@@ -165,9 +165,16 @@ summary(dgeec_public$Alunos)
 # School locations --------------------------------------------------------
 
 # Location data from https://github.com/carrismetropolitana/datasets/blob/latest/facilities/schools/schools.csv
+# This covers the whole Lisbon Metropolitan Area
 
-school_geo = read_sf("../internal/schools.csv")
-View(school_geo)
-summary(school_geo$id)
+school_geo = read_csv("../internal/schools.csv")
+# View(school_geo)
+# summary(school_geo$id)
+
+school_geom = st_as_sf(school_geo, coords = c("lon", "lat"), crs = 4326)
+
+tm_shape(school_geom) + tm_dots()
 
 # Join with dgeec data based on school names
+schools_joined = inner_join(school_geom, dgeec_public, by = c("name" = "ESCOLA")) # only 22 matches
+
