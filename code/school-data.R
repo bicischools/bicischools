@@ -195,7 +195,8 @@ rede_escolas = read_xlsx("../internal/RedeEscolas.xlsx")
 dim(rede_escolas)
 # [1] 190  19
 
-rede_joined = inner_join(rede_escolas, school_geom, by = c("CODIGO" = "id"))
+# inner or right join??
+rede_joined = right_join(rede_escolas, school_geom, by = c("CODIGO" = "id"))
 
 # Check - every school in `rede_escolas` can be found in `school_geom`
 dim(rede_joined)
@@ -224,3 +225,43 @@ sum(without_location$Alunos)/sum(join_schools$Alunos)*100
 with_location = join_schools |> 
   filter(!is.na(CODIGO))
 tm_shape(with_location) + tm_dots()
+
+tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+  tm_shape(with_location) + tm_dots(
+    # col = "CICLO DE ESTUDOS", 
+    # palete = c(`1.º Ciclo` = "blue", `2.º Ciclo` = "green", `3.º Ciclo` = "yellow"),
+    size = "Alunos")
+tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+  tm_shape(with_location) + tm_dots(shape = "CICLO DE ESTUDOS", size = 1)
+
+
+# without_joined = inner_join(without_location, rede_joined, by = c("ESCOLA" = "name"))
+
+
+# Divide into the 3 ciclos ------------------------------------------------
+
+ciclo_1 = with_location |> 
+  filter(`CICLO DE ESTUDOS` == "1.º Ciclo")
+ciclo_2 = with_location |> 
+  filter(`CICLO DE ESTUDOS` == "2.º Ciclo")
+ciclo_3 = with_location |> 
+  filter(`CICLO DE ESTUDOS` == "3.º Ciclo")
+
+tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+  tm_shape(ciclo_1) + tm_dots(size = "Alunos")
+tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+  tm_shape(ciclo_2) + tm_dots(size = "Alunos")
+tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+  tm_shape(ciclo_3) + tm_dots(size = "Alunos")
+
+# We're especially missing ciclo 2 and 3 schools
+sum(ciclo_1$Alunos) # 4 school years
+# [1] 21622 
+sum(ciclo_2$Alunos) # 2 school years
+# [1] 5691
+sum(ciclo_3$Alunos) # 3 school years
+# [1] 7501
+
+saveRDS(ciclo_1, "ciclo-1.Rds")
+saveRDS(ciclo_2, "ciclo-2.Rds")
+saveRDS(ciclo_3, "ciclo-3.Rds")
