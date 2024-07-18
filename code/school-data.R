@@ -173,8 +173,54 @@ school_geo = read_csv("../internal/schools.csv")
 
 school_geom = st_as_sf(school_geo, coords = c("lon", "lat"), crs = 4326)
 
-tm_shape(school_geom) + tm_dots()
+tm_shape(school_geom_clean) + tm_dots()
+
+# Lisbon City only
+school_geom_filtered = school_geom |> 
+  filter(municipality_name == "Lisboa",
+         university == 0,
+         pre_school == 0
+         )
 
 # Join with dgeec data based on school names
-schools_joined = inner_join(school_geom, dgeec_public, by = c("name" = "ESCOLA")) # only 22 matches
+schools_joined = inner_join(dgeec_totals, school_geom, by = c("ESCOLA" = "name")) # only 7 matches
 
+# clean names
+school_geom_clean = school_geom_filtered |> 
+  mutate(name_clean = name)
+
+# School address database from https://www.gesedu.pt/PesquisaRede
+# This includes the same school ID codes as `school_geom`
+rede_escolas = read_xlsx("../internal/RedeEscolas.xlsx")
+dim(rede_escolas)
+# [1] 190  19
+
+rede_joined = inner_join(rede_escolas, school_geom, by = c("CODIGO" = "id"))
+
+# Check - every school in `rede_escolas` can be found in `school_geom`
+dim(rede_joined)
+# [1] 190  54
+
+# Try joining now
+join_schools = left_join(dgeec_totals, rede_joined, by = c("ESCOLA" = "NOME"))
+join_schools = st_as_sf(join_schools)
+
+# there are still 135 schools missing locations
+sum(is.na(join_schools$CODIGO))
+# [1] 135
+
+# Schools without location
+without_location = join_schools |> 
+  filter(is.na(CODIGO))
+
+# We're missing locations for 42% of students
+sum(join_schools$Alunos)
+# [1] 60146
+sum(without_location$Alunos)
+# [1] 25332
+sum(without_location$Alunos)/sum(join_schools$Alunos)*100
+# [1] 42.11751
+
+with_location = join_schools |> 
+  filter(!is.na(CODIGO))
+tm_shape(with_location) + tm_dots()
