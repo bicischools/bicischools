@@ -37,11 +37,10 @@ schools_primary = schools_basic |>
 
 bgri = read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
 
-tm_shape(bgri) + tm_polygons("N_INDIVIDUOS_0_14")
-
 bgri_lisbon = bgri |> 
   filter(DTMN21 == 1106)
-tm_shape(bgri_lisbon) + tm_polygons()
+# tm_shape(bgri) + tm_polygons("N_INDIVIDUOS_0_14") # slow
+# tm_shape(bgri_lisbon) + tm_polygons()
 
 # Not needed
 # # District and region polygons for continental Portugal
@@ -82,7 +81,7 @@ table(dgeec_lisbon$`CICLO DE ESTUDOS`, useNA = "ifany")
 #   1418       401       705      2732
 
 # We want schools for children only
-table(dgeec_totals$ORIENTAÇÃO, useNA = "ifany")
+table(dgeec_lisbon$ORIENTAÇÃO, useNA = "ifany")
 # Programas educativos orientados para adultos       Programas educativos orientados para crianças 
 # 271                                                 556 
 # Programas educativos orientados para jovens Programas educativos orientados para jovens/adultos 
@@ -173,7 +172,7 @@ school_geo = read_csv("../internal/schools.csv")
 
 school_geom = st_as_sf(school_geo, coords = c("lon", "lat"), crs = 4326)
 
-tm_shape(school_geom_clean) + tm_dots()
+tm_shape(school_geom) + tm_dots()
 
 # Lisbon City only
 school_geom_filtered = school_geom |> 

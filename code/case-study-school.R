@@ -10,3 +10,7 @@ tm_shape(home_dots) + tm_dots()
 
 dim(home_dots)
 # [1] 169   3
+
+
+# Distance frequency curves -----------------------------------------------
+# For routes and desire lines
