@@ -1,3 +1,7 @@
+library(tidyverse)
+library(tmap)
+tmap_mode("view")
+
 schools_geo = readRDS("data/SCHOOLS_geo.Rds")
 schools_year = readRDS("data/SCHOOLS_year.Rds")
 
@@ -31,8 +35,9 @@ by_ciclo = schools_both |>
   group_by(DGEEC_id, ESCOLA, MUNICIPIO, PUBLIC_PRIVATE, CICLO_ESTUDOS) |> 
   summarise(STUDENTS = sum(STUDENTS))
 
-# There are 64 schools without info on student ages. 
-# We could use the school names to deduce this for a lot of these schools
+# 64 schools contain some students not assigned to a year group
+# We can use the school names to deduce year groups for a lot of these schools
+# Although perhaps these are mature students??
 table(by_ciclo$CICLO_ESTUDOS, useNA = "ifany")
 # 1.º Ciclo 2.º Ciclo 3.º Ciclo Secondary      <NA> 
 #   891       320       359       234        64 
@@ -42,12 +47,27 @@ no_ciclo = by_ciclo |>
 no_ciclo$basica = grepl("Básica", no_ciclo$ESCOLA)
 no_ciclo$secundaria = grepl("Secundária", no_ciclo$ESCOLA)
 no_ciclo = no_ciclo |> 
-  mutate(basic_only = case_when(basica & !secundaria ~ "yes", TRUE ~ "unclear"),
-         basic_and_secondary = case_when(basica & secundaria ~ "yes", TRUE ~ "unclear"),
-         secondary_only = case_when(!basica & secundaria ~ "yes", TRUE ~ "unclear")
-         )
+  mutate(
+    basic_only = case_when(basica & !secundaria ~ "yes", TRUE ~ "unclear"),
+    basic_and_secondary = case_when(basica & secundaria ~ "yes", TRUE ~ "unclear"),
+    secondary_only = case_when(!basica & secundaria ~ "yes", TRUE ~ "unclear")
+  )
 
 # now we can estimate numbers of children in each year group accordingly
+no_ciclo = no_ciclo |> 
+  mutate(
+    ciclo_1_students = case_when(basic_only == "yes" ~ round(STUDENTS / 9 * 4),
+                                 TRUE ~ 0),
+    ciclo_2_students = case_when(basic_only == "yes" ~ round(STUDENTS / 9 * 2),
+                                 basic_and_secondary == "yes" ~ round(STUDENTS / 8 * 2),
+                                 TRUE ~ 0),
+    ciclo_3_students = case_when(basic_only == "yes" ~ round(STUDENTS / 9 * 3),
+                                 basic_and_secondary == "yes" ~ round(STUDENTS / 8 * 3),
+                                 TRUE ~ 0),
+  )
+
+extra_students = no_ciclo |> 
+  filter(ciclo_3_students > 0)
 
 ##################################################
 
