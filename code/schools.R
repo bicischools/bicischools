@@ -92,6 +92,7 @@ saveRDS(lisbon_c1, "data/lisbon_c1.Rds")
 saveRDS(lisbon_c2, "data/lisbon_c2.Rds")
 saveRDS(lisbon_c3, "data/lisbon_c3.Rds")
 
+########################
 c1 = by_ciclo |> 
   filter(CICLO_ESTUDOS == "1.º Ciclo")
 c2 = by_ciclo |> 
@@ -116,4 +117,34 @@ ggplot(c2, aes(STUDENTS)) +
 ggplot(c3, aes(STUDENTS)) + 
   geom_histogram() +
   ggtitle("3.º Ciclo, Lisbon Metropolitan Area") + 
+  xlab("Students")
+
+########################
+c1_public = by_ciclo |> 
+  filter(CICLO_ESTUDOS == "1.º Ciclo",
+         PUBLIC_PRIVATE == "Público")
+c2_public = by_ciclo |> 
+  filter(CICLO_ESTUDOS == "2.º Ciclo",
+         PUBLIC_PRIVATE == "Público")
+c3_public = by_ciclo |> 
+  filter(CICLO_ESTUDOS == "3.º Ciclo",
+         PUBLIC_PRIVATE == "Público")
+
+saveRDS(c1_public, "data/c1_public.Rds")
+saveRDS(c2_public, "data/c2_public.Rds")
+saveRDS(c3_public, "data/c3_public.Rds")
+
+ggplot(c1_public, aes(STUDENTS)) + 
+  geom_histogram() +
+  ggtitle("1.º Ciclo public schools, Lisbon Metropolitan Area") + 
+  xlab("Students")
+
+ggplot(c2_public, aes(STUDENTS)) +  
+  geom_histogram() +
+  ggtitle("2.º Ciclo public schools, Lisbon Metropolitan Area") + 
+  xlab("Students")
+
+ggplot(c3_public, aes(STUDENTS)) + 
+  geom_histogram() +
+  ggtitle("3.º Ciclo public schools, Lisbon Metropolitan Area") + 
   xlab("Students")
