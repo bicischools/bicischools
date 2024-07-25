@@ -55,6 +55,10 @@ home_assigned = home_assigned |>
 
 tm_shape(home_assigned) + tm_polygons()
 
-# The 169 home locations (= 169 students?) lie within 87 different enumeration areas
+# The 169 home locations (= 169 students?) lie within 87 different enumeration zones
 length(unique(home_assigned$OBJECTID))
 # [1] 87
+
+# Now make table showing the number of students in each zone (list each zone once only)
+
+# Then assign centroids for each zone
