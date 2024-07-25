@@ -70,7 +70,6 @@ extra_students = no_ciclo |>
   filter(ciclo_3_students > 0)
 
 ##################################################
-
 lisbon_c1 = by_ciclo |> 
   filter(MUNICIPIO == "Lisboa",
          CICLO_ESTUDOS == "1.º Ciclo")

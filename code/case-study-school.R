@@ -1,5 +1,9 @@
+library(sf)
+
 home = readRDS("../internal/Bicischools_home_sample.Rds")
 school = readRDS("../internal/Bicischools_school_sample.Rds")
+st_crs(home) = 4326
+st_crs(school) = 4326
 
 tm_shape(home) + tm_lines()
 
@@ -14,3 +18,9 @@ dim(home_dots)
 
 # Distance frequency curves -----------------------------------------------
 # For routes and desire lines
+home = home |> 
+  mutate(
+    linestring_route_length = st_length(geometry),
+    desire_line_length = st_distance(home_coords, school)[,1]
+    )
+
