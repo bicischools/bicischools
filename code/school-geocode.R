@@ -115,3 +115,19 @@ SCHOOLS_year$CICLO_ESTUDOS[SCHOOLS_year$ANO_ESCOLARIDADE %in% c("10.º Ano", "11
 
 saveRDS(SCHOOLS_geo, "data/SCHOOLS_geo.Rds")
 saveRDS(SCHOOLS_year, "data/SCHOOLS_year.Rds")
+
+SCHOOLS_geo = readRDS("data/SCHOOLS_geo.Rds")
+SCHOOLS_year = readRDS("data/SCHOOLS_year.Rds")
+
+
+# simple stats ------------------------------------------------------------
+
+SCHOOLS_year |> 
+  group_by(PUBLIC_PRIVATE) |> 
+  summarise(Alunos = sum(STUDENTS)) |> 
+  knitr::kable(caption = "Number of students by school type")
+
+SCHOOLS_year |>
+  group_by(CICLO_ESTUDOS) |>
+  summarise(Alunos = sum(STUDENTS)) |>
+  knitr::kable(caption = "Number of students by school level")
