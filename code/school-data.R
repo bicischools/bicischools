@@ -4,7 +4,12 @@ library(ggplot2)
 library(tmap)
 tmap_mode("view")
 
-schools_basic = read_sf("../internal/SCHOOLS_basicsec.gpkg")
+data_dir = "../internal"
+data_dir_onedrive = "C:/Users/georl_admin/University of Leeds/Joseph Talbot - BiciSchools"
+if (dir.exists(data_dir_onedrive)) {
+  data_dir = data_dir_onedrive
+}
+schools_basic = read_sf(glue::glue("{data_dir}/SCHOOLS_basicsec.gpkg"))
 
 View(schools_basic)
 table(schools_basic$Nivel, useNA = "ifany")
@@ -30,12 +35,12 @@ schools_primary = schools_basic |>
   filter(Nivel == "Basico")
 
 # Doesn't work:
-# schools_1_ciclo = read_sf("../internal/escolas-publicas-1-ciclo.geojson")
+# schools_1_ciclo = read_sf(glue::glue("{data_dir}/escolas-publicas-1-ciclo.geojson"))
 
 
 # Census data for Lisbon Metropolitan Area (very detailed geog) -----------
 
-bgri = read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
+bgri = read_sf(glue::glue("{data_dir}/BGRI21_170/BGRI21_170.gpkg"))
 
 bgri_lisbon = bgri |> 
   filter(DTMN21 == 1106)
@@ -46,7 +51,7 @@ bgri_lisbon = bgri |>
 # # District and region polygons for continental Portugal
 # # from https://forest-gis.com/shapefiles-de-portugal/
 # # via https://web.archive.org/web/20211121211516/http://mapas.dgterritorio.pt/ATOM-download/CAOP-Cont/Cont_AAD_CAOP2020.zip
-# cont = read_sf("../internal/Cont_AAD_CAOP2020/Cont_AAD_CAOP2020.shp")
+# cont = read_sf(glue::glue("{data_dir}/Cont_AAD_CAOP2020/Cont_AAD_CAOP2020.shp")
 # 
 # tm_shape(cont) + tm_polygons("Concelho")
 # 
@@ -64,9 +69,9 @@ tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
 
 
 # DGEEC school data -------------------------------------------------------
-
+# Nationwide data on every Portuguese with n. per age group
 library(readxl)
-dgeec_schools = read_xlsx("../internal/DGEEC_AlunosMatriculados_Continente2122.xlsx")
+dgeec_schools = read_xlsx(glue::glue("{data_dir}/DGEEC_AlunosMatriculados_Continente2122.xlsx"))
 
 dgeec_lma = dgeec_schools |> 
   filter(`NUTS II (2013)` == "Área Metropolitana de Lisboa")
@@ -166,7 +171,7 @@ summary(dgeec_public$Alunos)
 # Location data from https://github.com/carrismetropolitana/datasets/blob/latest/facilities/schools/schools.csv
 # This covers the whole Lisbon Metropolitan Area
 
-school_geo = read_csv("../internal/schools.csv")
+school_geo = read_csv(glue::glue("{data_dir}/schools.csv"))
 # View(school_geo)
 # summary(school_geo$id)
 
@@ -190,7 +195,7 @@ school_geom_clean = school_geom_filtered |>
 
 # School address database from https://www.gesedu.pt/PesquisaRede
 # This includes the same school ID codes as `school_geom`
-rede_escolas = read_xlsx("../internal/RedeEscolas.xlsx")
+rede_escolas = read_xlsx(glue::glue("{data_dir}/RedeEscolas.xlsx"))
 dim(rede_escolas)
 # [1] 190  19
 
@@ -225,13 +230,13 @@ with_location = join_schools |>
   filter(!is.na(CODIGO))
 tm_shape(with_location) + tm_dots()
 
-tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
-  tm_shape(with_location) + tm_dots(
-    # col = "CICLO DE ESTUDOS", 
-    # palete = c(`1.º Ciclo` = "blue", `2.º Ciclo` = "green", `3.º Ciclo` = "yellow"),
-    size = "Alunos")
-tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
-  tm_shape(with_location) + tm_dots(shape = "CICLO DE ESTUDOS", size = 1)
+# tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+#   tm_shape(with_location) + tm_dots(
+#     # col = "CICLO DE ESTUDOS", 
+#     # palete = c(`1.º Ciclo` = "blue", `2.º Ciclo` = "green", `3.º Ciclo` = "yellow"),
+#     size = "Alunos")
+# tm_shape(bgri_lisbon) + tm_polygons("N_INDIVIDUOS_0_14") +
+#   tm_shape(with_location) + tm_dots(shape = "CICLO DE ESTUDOS", size = 1)
 
 
 # without_joined = inner_join(without_location, rede_joined, by = c("ESCOLA" = "name"))
