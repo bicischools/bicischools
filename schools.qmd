@@ -9,7 +9,7 @@ prefer-html: true
 library(tidyverse)
 library(sf)
 library(tmap)
-tmap_mode("view")
+# tmap_mode("view") # for interactive maps
 ```
 
 Schools in Portugal are classified into Básica and Secundária. 
