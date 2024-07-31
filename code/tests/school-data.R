@@ -8,6 +8,10 @@ data_dir = "../internal"
 data_dir_onedrive = "C:/Users/georl_admin/University of Leeds/Joseph Talbot - BiciSchools"
 if (dir.exists(data_dir_onedrive)) {
   data_dir = data_dir_onedrive
+  # files_in_data_dir = list.files("data", full.names = TRUE)
+  # files_in_onedrive = file.path(data_dir_onedrive, basename(files_in_data_dir))
+  # file.exists(files_in_onedrive)
+  # file.copy(files_in_data_dir, files_in_onedrive)
 }
 schools_basic = read_sf(glue::glue("{data_dir}/SCHOOLS_basicsec.gpkg"))
 

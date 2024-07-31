@@ -61,4 +61,4 @@ length(unique(home_assigned$OBJECTID))
 
 # Now make table showing the number of students in each zone (list each zone once only)
 
-# Then assign centroids for each zone
+# Then assign centroids for each zone to generate OD dataset at the zone-school level with counts
