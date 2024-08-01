@@ -71,6 +71,11 @@ length(unique(home_assigned$OBJECTID))
 # Now make table showing the number of students in each zone (list each zone once only)
 zone_counts = home_assigned |> 
   group_by(OBJECTID, DTMN21, N_INDIVIDUOS_0_14) |> 
-  summarise(n = n())
+  summarise(n_students = n())
 
 # Then assign centroids for each zone to generate OD dataset at the zone-school level with counts
+zone_centroids = st_centroid(zone_counts)
+
+tm_shape(zone_centroids) + tm_dots()
+
+
