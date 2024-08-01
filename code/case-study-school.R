@@ -17,6 +17,9 @@ home_dots = st_as_sf(home$home_coords)
 dim(home_dots)
 # [1] 169   1
 
+# the 169 students have 100 unique home locations (so it includes kids within the same family)
+length(unique(home$home_coords))
+# [1] 100 
 
 # Distance frequency curves -----------------------------------------------
 # For routes and desire lines
@@ -64,7 +67,7 @@ home_assigned = home_assigned |>
 
 tm_shape(home_assigned) + tm_polygons()
 
-# The 169 home locations (= 169 students?) lie within 87 different enumeration zones
+# The 169 students live in 87 different enumeration zones
 length(unique(home_assigned$OBJECTID))
 # [1] 87
 
@@ -77,5 +80,18 @@ zone_counts = home_assigned |>
 zone_centroids = st_centroid(zone_counts)
 
 tm_shape(zone_centroids) + tm_dots()
+
+# Filter out centroids >3km euclidean distance from the school 
+zone_centroids = zone_centroids |> 
+  mutate(
+    desire_line_length = st_distance(geom, school)[,1],
+    desire_line_length = drop_units(desire_line_length)
+  )
+
+centroids_3km = zone_centroids |> 
+  filter(desire_line_length < 3000)
+
+
+# Route trips from zone centroids to school -------------------------------
 
 
