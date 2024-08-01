@@ -1,4 +1,6 @@
 library(sf)
+library(ggplot2)
+library(units)
 
 home = readRDS("../internal/Bicischools_home_sample.Rds")
 school = readRDS("../internal/Bicischools_school_sample.Rds")
@@ -13,7 +15,7 @@ home_dots = st_as_sf(home$home_coords)
 # tm_shape(home_dots) + tm_dots()
 
 dim(home_dots)
-# [1] 169   3
+# [1] 169   1
 
 
 # Distance frequency curves -----------------------------------------------
@@ -24,8 +26,6 @@ home = home |>
     desire_line_length = st_distance(home_coords, school)[,1]
     )
 
-library(ggplot2)
-library(units)
 ggplot(home, aes(desire_line_length)) +
   geom_histogram()
 ggplot(home, aes(linestring_route_length)) +
@@ -42,6 +42,15 @@ dim(below_5km)
 # [1] 143   5
 dim(below_5km)[1]/dim(home)[1] # 85% of students live within 5km route length of school
 # [1] 0.8461538 
+
+below_3km = home |> 
+  drop_units() |> 
+  filter(linestring_route_length < 3000,
+         linestring_route_length > 500)
+dim(below_3km)
+# [1] 94   5
+dim(below_3km)[1]/dim(home)[1] # 56% of students live between 500m and 3km route length from school
+# [1] 0.556213 
 
 
 # Assign home locations to enumeration districts --------------------------
@@ -60,5 +69,8 @@ length(unique(home_assigned$OBJECTID))
 # [1] 87
 
 # Now make table showing the number of students in each zone (list each zone once only)
+zone_counts = home_assigned |> 
+  group_by(OBJECTID, DTMN21, N_INDIVIDUOS_0_14) |> 
+  summarise(n = n())
 
 # Then assign centroids for each zone to generate OD dataset at the zone-school level with counts
