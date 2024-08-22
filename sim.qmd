@@ -67,13 +67,13 @@ The input datasets are illustrated in the figure below (these are `zone_counts` 
 #| label: inputs
 zone_counts = readRDS("data/zone_counts.Rds")
 school = readRDS("../internal/Bicischools_school_sample.Rds")
-st_crs(school) = 4326
+sf::st_crs(school) = 4326
 school = school |> 
   mutate(
     id = 111,
-    n_students = 169
+    n_pupils = 169
     ) |> 
-  select(id, n_students)
+  select(id, n_pupils)
 g1 = zone_counts |>
   ggplot() +
   geom_sf() +
@@ -92,31 +92,32 @@ Before we run any models let's compare the total number of pupils in the zones d
 #| echo: true
 zone_overestimate_factor = 
   (sum(zone_counts$N_INDIVIDUOS_0_14) /
-    sum(school$n_students))
+    sum(school$n_pupils))
 zone_overestimate_factor
 ```
 
 As we only have one school, the total number of children resident in the zones dataset is many times larger than the number of students going to this single school.
 
-<!-- To tackle this issue we'll create a new variables called `pupils_estimated` in the zones dataset, which is the sum of the number of pupils in the zones dataset and the number of pupils in the destinations dataset. -->
+To tackle this issue we'll create a new variables called `pupils_estimated` in the zones dataset, which is the sum of the number of pupils in the zones dataset and the number of pupils in the destinations dataset.
 
-<!-- ```{r} -->
-<!-- #| label: add-pupils-estimated -->
-<!-- #| echo: true -->
-<!-- zone_counts = zone_counts |> -->
-<!--   dplyr::mutate( -->
-<!--     pupils_estimated = (f0_to_15 + m0_to_15) / zone_overestimate_factor -->
-<!--   ) -->
-<!-- ``` -->
+```{r}
+#| label: add-pupils-estimated
+#| echo: true
+zone_counts = zone_counts |>
+  dplyr::mutate(
+    # pupils_estimated = (f0_to_15 + m0_to_15) / zone_overestimate_factor
+    pupils_estimated = n_students
+  )
+```
 
-<!-- After the adjustment shown above, the totals in the origin and destination columns should be the same: -->
+After the adjustment shown above, the totals in the origin and destination columns should be the same:
 
-<!-- ```{r} -->
-<!-- #| label: compare-totals-after -->
-<!-- #| echo: true -->
-<!-- sum(zone_counts$pupils_estimated) -->
-<!-- sum(school$n_pupils) -->
-<!-- ``` -->
+```{r}
+#| label: compare-totals-after
+#| echo: true
+sum(zone_counts$pupils_estimated)
+sum(school$n_pupils)
+```
 
 # Preprocessing
 
@@ -150,7 +151,10 @@ names(od_from_si)
 
 ```{r}
 #| include: false
-od_observed = read_csv("od_york.csv")
+od_observed = readRDS("data/zone_counts.Rds")
+od_observed = od_observed |> 
+  mutate(D = 111) |> 
+  select(OBJECTID, D)
 names(od_observed)[1:2] = c("O", "D")
 # join od_observed to od_from_si:
 od_from_si = left_join(
