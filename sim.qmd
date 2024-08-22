@@ -61,24 +61,29 @@ theme_set(theme_minimal())
 ```
 
 The package uses the [`{simodels}` R package](https://robinlovelace.github.io/simodels/) to pre-process the input datasets and generate the OD data used as the basis of the interaction prediction model.
-The input datasets are illustrated in the figure below (these are `zone_counts` and `school` that are provided with the pacage):
+The input datasets are illustrated in the figure below (these are `home_zones` and `schools_c1` that are provided with the package):
 
 ```{r}
 #| label: inputs
-zone_counts = readRDS("data/zone_counts.Rds")
-school = readRDS("../internal/Bicischools_school_sample.Rds")
-sf::st_crs(school) = 4326
-school = school |> 
+# zone_counts = readRDS("data/zone_counts.Rds")
+bgri = sf::read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
+bgri_4326 = sf::st_transform(bgri, 4326)
+bgri_4326 = sf::st_make_valid(bgri_4326)
+home_zones = bgri_4326 |> 
+  select(OBJECTID, N_INDIVIDUOS_0_14)
+
+schools_c1 = readRDS("data/c1_public.Rds")
+# sf::st_crs(school) = 4326
+schools_c1 = schools_c1 |> 
   mutate(
-    id = 111,
-    n_pupils = 169
+    n_pupils = STUDENTS
     ) |> 
-  select(id, n_pupils)
-g1 = zone_counts |>
+  select(DGEEC_id, n_pupils)
+g1 = home_zones |>
   ggplot() +
   geom_sf() +
   labs(title = "Zones")
-g2 = school |>
+g2 = schools_c1 |>
     ggplot() +
     geom_sf() +
     labs(title = "Destinations")
@@ -91,22 +96,21 @@ Before we run any models let's compare the total number of pupils in the zones d
 #| label: compare-totals
 #| echo: true
 zone_overestimate_factor = 
-  (sum(zone_counts$N_INDIVIDUOS_0_14) /
-    sum(school$n_pupils))
+  (sum(home_zones$N_INDIVIDUOS_0_14) /
+    sum(schools_c1$n_pupils))
 zone_overestimate_factor
 ```
 
-As we only have one school, the total number of children resident in the zones dataset is many times larger than the number of students going to this single school.
+There are more resident children than school students, because younger children won't attend school and others will go to private schools. 
 
 To tackle this issue we'll create a new variables called `pupils_estimated` in the zones dataset, which is the sum of the number of pupils in the zones dataset and the number of pupils in the destinations dataset.
 
 ```{r}
 #| label: add-pupils-estimated
 #| echo: true
-zone_counts = zone_counts |>
+home_zones = home_zones |>
   dplyr::mutate(
-    # pupils_estimated = (f0_to_15 + m0_to_15) / zone_overestimate_factor
-    pupils_estimated = n_students
+    pupils_estimated = N_INDIVIDUOS_0_14 / zone_overestimate_factor
   )
 ```
 
@@ -115,8 +119,8 @@ After the adjustment shown above, the totals in the origin and destination colum
 ```{r}
 #| label: compare-totals-after
 #| echo: true
-sum(zone_counts$pupils_estimated)
-sum(school$n_pupils)
+sum(home_zones$pupils_estimated)
+sum(schools_c1$n_pupils)
 ```
 
 # Preprocessing
@@ -126,8 +130,8 @@ Based on these inputs the `si_to_od()` function generates the OD data, as shown 
 ```{r}
 #| echo: true
 max_dist = 5000 # meters
-od_from_si_full = simodels::si_to_od(zone_counts, school)
-od_from_si = simodels::si_to_od(zone_counts, school, max_dist = max_dist)
+od_from_si_full = simodels::si_to_od(home_zones, schools_c1)
+od_from_si = simodels::si_to_od(home_zones, schools_c1, max_dist = max_dist)
 ```
 
 ```{r}
@@ -151,7 +155,7 @@ names(od_from_si)
 
 ```{r}
 #| include: false
-od_observed = readRDS("data/zone_counts.Rds")
+od_observed = readRDS("data/home_zones.Rds")
 od_observed = od_observed |> 
   mutate(D = 111) |> 
   select(OBJECTID, D)
