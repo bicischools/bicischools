@@ -63,9 +63,10 @@ c3_public = by_ciclo |>
   filter(CICLO_ESTUDOS == "3.º Ciclo",
          PUBLIC_PRIVATE == "Público")
 
-# saveRDS(c1_public, "data/c1_public.Rds")
-# saveRDS(c2_public, "data/c2_public.Rds")
-# saveRDS(c3_public, "data/c3_public.Rds")
+# Required for sim.qmd
+saveRDS(c1_public, "data/c1_public.Rds")
+saveRDS(c2_public, "data/c2_public.Rds")
+saveRDS(c3_public, "data/c3_public.Rds")
 ```
 
 For Lisbon municipality, this shows the number of students at Ciclo 1 schools.
