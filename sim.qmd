@@ -67,7 +67,8 @@ zone_overestimate_factor =
 zone_overestimate_factor
 ```
 
-There are more resident children than school students, because younger children won't attend school and others will go to private schools. 
+There are more resident children than school students, because we are only looking at schools from Ciclo 1, which covers four school years. 
+Also, younger children won't attend school and others will go to private schools. 
 
 To tackle this issue we'll create a new variables called `pupils_estimated` in the zones dataset, which is the sum of the number of pupils in the zones dataset and the number of pupils in the destinations dataset.
 

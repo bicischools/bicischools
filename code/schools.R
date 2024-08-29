@@ -1,4 +1,5 @@
 library(tidyverse)
+library(sf)
 library(tmap)
 tmap_mode("view")
 
