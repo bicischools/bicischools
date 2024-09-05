@@ -39,7 +39,6 @@ home_zones = bgri_4326 |>
 
 # See schools.qmd
 schools_c1 = readRDS("data/c1_public.Rds")
-# sf::st_crs(school) = 4326
 schools_c1 = schools_c1 |> 
   mutate(
     n_pupils = STUDENTS
@@ -160,7 +159,7 @@ We'll make one adjustment to the output dataset, renaming the `interaction` colu
 ```{r}
 #| label: adjust-output
 #| echo: true
-interaction_overestimate_factor = sum(school$n_pupils) / sum(od_res$interaction)
+interaction_overestimate_factor = sum(schools_c1$n_pupils) / sum(od_res$interaction)
 od_res = od_res |>
   dplyr::mutate(
     interaction = interaction * interaction_overestimate_factor
@@ -299,7 +298,7 @@ objective_function = function(beta) {
     n = destination_n_pupils,
     beta = beta
   )
-  interaction_overestimate_factor = sum(school$n_pupils) / sum(od_res$interaction)
+  interaction_overestimate_factor = sum(schools_c1$n_pupils) / sum(od_res$interaction)
   od_res = od_res |>
     dplyr::mutate(
       trips = interaction * interaction_overestimate_factor
@@ -352,7 +351,7 @@ res_constrained = simodels::si_calculate(
 ```{r}
 #| include: false
 # Aim: check totals per origin
-sum(res_constrained$interaction) == sum(school$n_pupils)
+sum(res_constrained$interaction) == sum(schools_c1$n_pupils)
 res_constrained = res_constrained |>
   mutate(trips = interaction)
 res_constrained_o = res_constrained |>

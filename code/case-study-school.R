@@ -5,6 +5,16 @@ library(tidyverse)
 library(tmap)
 tmap_mode("view")
 
+# Explore existing data for Escola Básica Adriano Correia de Oliveira
+
+schools_year = readRDS("data/SCHOOLS_year.Rds")
+existing = schools_year |> filter(DGEEC_id == 1106908)
+View(existing)
+sum(existing$STUDENTS)
+# [1] 110 # why only 110?
+
+# Case study dataset
+
 home = readRDS("../internal/Bicischools_home_sample.Rds")
 school = readRDS("../internal/Bicischools_school_sample.Rds")
 st_crs(home) = 4326
