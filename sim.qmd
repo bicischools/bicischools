@@ -11,7 +11,7 @@ execute:
 
 # Introduction
 
-The code in this results demonstrates how to generate origin-destination (OD) data for a given set of zones and destinations.
+The code in these results demonstrates how to generate origin-destination (OD) data for a given set of zones and destinations.
 OD data is a key input into spatial interaction models (SIMs) for generating route networks.
 (See [An introduction to spatial interaction models: from first principles](https://robinlovelace.github.io/simodels/articles/sims-first-principles.html) introduction to SIMs for more information.)
 The code is fully reproducible, although requires a validation dataset that is not in the public domain to generate goodness-of-fit statistics shown in this README.
@@ -26,7 +26,7 @@ theme_set(theme_minimal())
 ```
 
 The package uses the [`{simodels}` R package](https://robinlovelace.github.io/simodels/) to pre-process the input datasets and generate the OD data used as the basis of the interaction prediction model.
-The input datasets are illustrated in the figure below (these are `home_zones` and `schools_c1` that are provided with the package):
+The input datasets are illustrated in the figure below (these are census data for BGRI zones in Lisbon city, and student numbers for Ciclo 1 schools in Lisbon):
 
 ```{r}
 #| label: inputs
@@ -73,8 +73,8 @@ zone_overestimate_factor =
 zone_overestimate_factor
 ```
 
-There are more resident children than school students, because we are only looking at Ciclo 1 schools, which covers four school years (age 6-10). 
-Also, younger children won't attend school and some school-age children will go to private schools. 
+There are more resident children (age 0-14 years) than school students, because we are only looking at Ciclo 1 schools, which covers four school years (age 6-10). 
+Also, younger children won't attend school. 
 
 To tackle this issue we'll create a new variables called `pupils_estimated` in the zones dataset, which is the sum of the number of pupils in the zones dataset and the number of pupils in the destinations dataset.
 
@@ -536,11 +536,10 @@ system("gh release create v0.1.0 res_output.geojson res_output.csv")
 
 The reproducible code in this vignette shows how to develop fast reproducible spatial interaction models (SIMs) using the `{simodels}` package.
 A simple model, using only one estimated parameter (beta) can explain more than half of the variation in flows, as measured by the R-squared value.
-This is not bad considering that York has a river so many of the Euclidean distances are not representative of the actual travel distances.
 
 There are many ways the model could be refined:
 
-- Using different models for different types of schools (e.g. primary and secondary schools).
+- Using different models for different types of schools (e.g. Ciclo 1, 2 and 3 schools).
 - Adding more parameters to the model, e.g. exponents on the origin and destination populations (see Wilson's work for more on that).
 - Using regression to estimate the impact of other variables on flows
 - Using a more complex model, such as the radiation model.
