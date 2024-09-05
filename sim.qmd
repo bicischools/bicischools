@@ -121,7 +121,7 @@ case_study_school = readRDS("data/zone_counts.Rds")
 od_observed = case_study_school |> 
   mutate(D = 1106908) |> 
   select(OBJECTID, D, n_students)
-names(od_observed)[1:2] = c("O", "D")
+names(od_observed)[1:3] = c("O", "D", "frequency")
 # join od_observed to od_from_si:
 od_from_si = left_join(
   od_from_si,
