@@ -377,11 +377,6 @@ rsq_constrained
 names(res_constrained)
 ```
 
-# ```{r}
-# #| label: r-squared-constrained
-# plot_od_fit(res_constrained, "(production-constrained)")
-# ```
-
 The R-squared value is `r round(rsq_constrained, 3)`.
 
 ## Doubly-constrained model
@@ -403,14 +398,6 @@ res_doubly_constrained = res_constrained |>
 sum(res_doubly_constrained$interaction) == sum(res_constrained$interaction) 
 ```
 
-<!--```{r} -->
-<!--# #| label: r-squared-doubly-constrained -->
-<!--# plot_od_fit(res_doubly_constrained, "(doubly-constrained)") -->
-<!--# rsq_doubly_constrained = cor(res_doubly_constrained$frequency, res_doubly_constrained$interaction, use  = "complete.obs")^2 -->
-<!--``` -->
-
-<!-- The R-squared value is `r round(rsq_doubly_constrained, 3)`. -->
-
 The model is now 'doubly constrained' in a basic sense: the first iteration constrains the totals for each origin to the observed totals, and the second iteration constrains the totals for each destination to the observed totals.
 
 Let's constrain by the origin totals again:
@@ -428,12 +415,6 @@ res_doubly_constrained_2 = res_doubly_constrained |>
   )
 ```
 
-<!--```{r} -->
-<!--#| include: false -->
-<!--# rsq_doubly_constrained_2 = cor(res_doubly_constrained_2$frequency, res_doubly_constrained_2$interaction, use = "complete.obs")^2 -->
-<!--# rsq_doubly_constrained_2 -->
-<!--```-->
-
 And then by the destination totals again:
 
 ```{r}
@@ -448,14 +429,6 @@ res_doubly_constrained_3 = res_doubly_constrained_2 |>
     interaction = interaction / modelled_overestimate_factor
   )
 ```
-
-<!--```{r} -->
-<!--#| include: false -->
-<!--# rsq_doubly_constrained_3 = cor(res_doubly_constrained_3$frequency, res_doubly_constrained_3$interaction, use = "complete.obs")^2 -->
-<!--# rsq_doubly_constrained_3 -->
-<!--```-->
-
-<!-- After one more full iteration of fitting to the observed totals, the R-squared value is `r round(rsq_doubly_constrained_3, 3)`. -->
 
 Additional iterations do not increase model fit against the observed OD data in this case (working not shown).
 
@@ -479,12 +452,6 @@ res_doubly_constrained_5 = res_doubly_constrained_4 |>
   )
 ```
 
-<!--```{r} -->
-<!--#| include: false -->
-<!--# rsq_doubly_constrained_5 = cor(res_doubly_constrained_5$frequency, res_doubly_constrained_5$interaction, use = "complete.obs")^2 -->
-<!--# rsq_doubly_constrained_5 -->
-<!--```-->
-
 
 ```{r}
 #| include: false 
@@ -507,11 +474,6 @@ res_doubly_constrained_7 = res_doubly_constrained_6 |>
   )
 ```
 
-<!--```{r} -->
-<!--#| include: false -->
-<!--# rsq_doubly_constrained_7 = cor(res_doubly_constrained_7$frequency, res_doubly_constrained_7$interaction, use = "complete.obs")^2 -->
-<!--# rsq_doubly_constrained_7 -->
-<!--```-->
 
 ```{r}
 # another iteration
@@ -534,16 +496,6 @@ res_doubly_constrained_9 = res_doubly_constrained_8 |>
   )
 ```
 
-<!--```{r} -->
-<!--#| include: false -->
-<!--# rsq_doubly_constrained_9 = cor(res_doubly_constrained_9$frequency, res_doubly_constrained_9$interaction, use = "complete.obs")^2 -->
-<!--# rsq_doubly_constrained_9 -->
-<!--```-->
-
-# ```{r}
-# #| label: plot-doubly-9
-# plot_od_fit(res_doubly_constrained_9, "(doubly-constrained, 9 iterations)")
-# ```
 
 # Model output
 
@@ -592,7 +544,7 @@ There are many ways the model could be refined:
 - Adding more parameters to the model, e.g. exponents on the origin and destination populations (see Wilson's work for more on that).
 - Using regression to estimate the impact of other variables on flows
 - Using a more complex model, such as the radiation model.
-- Scalability: it would be worth exploring how well the approach scales for all LSOAs and schools in the UK, for example.
+- Scalability: this is currently for Lisbon City only, but will need to be expanded to cover the full Metropolitan Area.
 
 For the purposes of this repo, however, we have demonstrated how to rapidly generate plausible OD data that can feed into network generation models.
 
