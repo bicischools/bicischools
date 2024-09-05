@@ -1,6 +1,19 @@
 library(sf)
 library(ggplot2)
 library(units)
+library(tidyverse)
+library(tmap)
+tmap_mode("view")
+
+# Explore existing data for Escola Básica Adriano Correia de Oliveira
+
+schools_year = readRDS("data/SCHOOLS_year.Rds")
+existing = schools_year |> filter(DGEEC_id == 1106908)
+View(existing)
+sum(existing$STUDENTS)
+# [1] 110 # why only 110?
+
+# Case study dataset
 
 home = readRDS("../internal/Bicischools_home_sample.Rds")
 school = readRDS("../internal/Bicischools_school_sample.Rds")
@@ -76,6 +89,8 @@ zone_counts = home_assigned |>
   group_by(OBJECTID, DTMN21, N_INDIVIDUOS_0_14) |> 
   summarise(n_students = n())
 
+saveRDS(zone_counts, "data/zone_counts.Rds")
+
 # Then assign centroids for each zone to generate OD dataset at the zone-school level with counts
 zone_centroids = st_centroid(zone_counts)
 
@@ -91,7 +106,25 @@ zone_centroids = zone_centroids |>
 centroids_3km = zone_centroids |> 
   filter(desire_line_length < 3000)
 
+tm_shape(centroids_3km) + tm_dots()
+
+# oood = centroids_3km |> 
+#   mutate(d = 111) |> 
+#   select(OBJECTID, d, n_students, N_INDIVIDUOS_0_14, desire_line_length, geometry = geom)
+
+
+# od_3km = centroids_3km |> 
+#   mutate(d = school$geometry)
+
+# od2line(zones = od_3km$geom, destinations = od_3km$d)
+# ls = st_linestring(rbind(centroids_3km$geom[1],school$geometry))
 
 # Route trips from zone centroids to school -------------------------------
 
+library(stplanr)
 
+# dests = list(school, rep = dim(centroids_3km)[1])
+# routes_3km = route(from = od_3km$geom, to = od_3km$d, route_fun = cyclestreets::journey)
+
+
+# ls <- st_linestring(rbind(c(0,0),c(1,1),c(2,1)))
