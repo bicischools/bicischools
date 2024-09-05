@@ -117,10 +117,11 @@ names(od_from_si)
 
 ```{r}
 #| include: false
-od_observed = readRDS("data/home_zones.Rds")
-od_observed = od_observed |> 
-  mutate(D = 111) |> 
-  select(OBJECTID, D)
+# using testing OD dataset based on the case study school, with destination code matching the one for Adriano Correia school in `schools_geo`
+case_study_school = readRDS("data/zone_counts.Rds")
+od_observed = case_study_school |> 
+  mutate(D = 1106908) |> 
+  select(OBJECTID, D, n_students)
 names(od_observed)[1:2] = c("O", "D")
 # join od_observed to od_from_si:
 od_from_si = left_join(
