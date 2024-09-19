@@ -36,8 +36,8 @@ tm_shape(quiet_routes) + tm_lines(lwd = "trips",
                                   col = "quietness", 
                                   palette = pal,
                                   breaks = quietness_breaks) +
-  tm_add_legend('fill', 
-                col = pal,
-                labels = c("0 to 25", "25 to 50", "50 to 75", "75 to 100"),
-                title="Tranquilidade") +
+  # tm_add_legend('fill', 
+  #               col = pal,
+  #               labels = c("0 to 25", "25 to 50", "50 to 75", "75 to 100"),
+  #               title="Tranquilidade") +
   tm_shape(schools_c1) + tm_dots()
