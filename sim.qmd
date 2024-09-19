@@ -38,7 +38,7 @@ bgri_4326 = sf::st_make_valid(bgri_4326)
 # Restrict to Lisbon city only
 bgri_4326 = bgri_4326 |> 
   filter(DTMN21 == 1106)
-schools_c1 = readRDS("data/lisbon_c1_public.Rds")
+schools_c1 = readRDS("data/lisbon_c1.Rds")
 
 # See schools.qmd
 # schools_c1 = readRDS("data/c1_public.Rds")
