@@ -148,3 +148,26 @@ ggplot(c3_public, aes(STUDENTS)) +
   geom_histogram() +
   ggtitle("3.º Ciclo public schools, Lisbon Metropolitan Area") + 
   xlab("Students")
+
+########################
+lisbon_c1_public = by_ciclo |> 
+  filter(CICLO_ESTUDOS == "1.º Ciclo",
+         MUNICIPIO == "Lisboa",
+         PUBLIC_PRIVATE == "Público")
+lisbon_c2_public = by_ciclo |> 
+  filter(CICLO_ESTUDOS == "2.º Ciclo",
+         MUNICIPIO == "Lisboa",
+         PUBLIC_PRIVATE == "Público")
+lisbon_c3_public = by_ciclo |> 
+  filter(CICLO_ESTUDOS == "3.º Ciclo",
+         MUNICIPIO == "Lisboa",
+         PUBLIC_PRIVATE == "Público")
+
+saveRDS(lisbon_c1_public, "data/lisbon_c1_public.Rds")
+saveRDS(lisbon_c2_public, "data/lisbon_c2_public.Rds")
+saveRDS(lisbon_c3_public, "data/lisbon_c3_public.Rds")
+
+ggplot(lisbon_c1_public, aes(STUDENTS)) + 
+  geom_histogram() +
+  ggtitle("1.º Ciclo public schools, Lisbon City") + 
+  xlab("Students")
