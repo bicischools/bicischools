@@ -11,7 +11,7 @@ schools_year = readRDS("data/SCHOOLS_year.Rds")
 existing = schools_year |> filter(DGEEC_id == 1106908)
 View(existing)
 sum(existing$STUDENTS)
-# [1] 110 # why only 110?
+# [1] 110 # this is different from the case study dataset because it's from a different year
 
 # Case study dataset
 
@@ -47,9 +47,19 @@ ggplot(home, aes(desire_line_length)) +
 ggplot(home, aes(linestring_route_length)) +
   geom_histogram()
 
+summary(home$desire_line_length)
+# Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+# 80.92   248.09   713.56  2167.34  1973.25 28564.06
+
 summary(home$linestring_route_length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 # 321.6   592.3  1243.2  3202.8  2822.0 38486.3
+
+below_5km_desire = home |> 
+  drop_units() |> 
+  filter(desire_line_length < 5000)
+dim(below_5km_desire)
+# [1] 153   5
 
 below_5km = home |> 
   drop_units() |> 
@@ -70,6 +80,7 @@ dim(below_3km)[1]/dim(home)[1] # 56% of students live between 500m and 3km route
 
 
 # Assign home locations to enumeration districts --------------------------
+# So we can route from zone centroids instead of home postcodes, for anonymity
 
 bgri = read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
 bgri_4326 = st_transform(bgri, 4326)
@@ -87,7 +98,8 @@ length(unique(home_assigned$OBJECTID))
 # Now make table showing the number of students in each zone (list each zone once only)
 zone_counts = home_assigned |> 
   group_by(OBJECTID, DTMN21, N_INDIVIDUOS_0_14) |> 
-  summarise(n_students = n())
+  summarise(n_students = n()) |> 
+  ungroup()
 
 saveRDS(zone_counts, "data/zone_counts.Rds")
 
@@ -96,35 +108,38 @@ zone_centroids = st_centroid(zone_counts)
 
 tm_shape(zone_centroids) + tm_dots()
 
-# Filter out centroids >3km euclidean distance from the school 
+# Filter out centroids >5km euclidean distance from the school 
 zone_centroids = zone_centroids |> 
   mutate(
     desire_line_length = st_distance(geom, school)[,1],
     desire_line_length = drop_units(desire_line_length)
   )
 
-centroids_3km = zone_centroids |> 
-  filter(desire_line_length < 3000)
+centroids_5km = zone_centroids |> 
+  filter(desire_line_length < 5000)
 
-tm_shape(centroids_3km) + tm_dots()
+tm_shape(centroids_5km) + tm_dots()
 
-# oood = centroids_3km |> 
-#   mutate(d = 111) |> 
-#   select(OBJECTID, d, n_students, N_INDIVIDUOS_0_14, desire_line_length, geometry = geom)
+od_5km = centroids_5km |>
+  mutate(d = school$geometry)
 
-
-# od_3km = centroids_3km |> 
-#   mutate(d = school$geometry)
-
-# od2line(zones = od_3km$geom, destinations = od_3km$d)
-# ls = st_linestring(rbind(centroids_3km$geom[1],school$geometry))
+od_5km$geometry = 
+  Map(st_union, od_5km$geom, od_5km$d) |> 
+  st_as_sfc(crs = st_crs(od_5km)) |> 
+  st_cast("LINESTRING")
+st_geometry(od_5km) = "geometry"
+od_5km = od_5km |> 
+  select(-c(geom, d))
 
 # Route trips from zone centroids to school -------------------------------
 
 library(stplanr)
 
-# dests = list(school, rep = dim(centroids_3km)[1])
-# routes_3km = route(from = od_3km$geom, to = od_3km$d, route_fun = cyclestreets::journey)
+routes_quiet = route(l = od_5km, route_fun = cyclestreets::journey, plan = "quietest")
 
+tm_shape(routes_quiet) + tm_lines()
 
-# ls <- st_linestring(rbind(c(0,0),c(1,1),c(2,1)))
+routes_fast = route(l = od_5km, route_fun = cyclestreets::journey, plan = "fastest")
+
+tm_shape(routes_fast) + tm_lines()
+
