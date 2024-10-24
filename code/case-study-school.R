@@ -143,3 +143,14 @@ routes_fast = route(l = od_5km, route_fun = cyclestreets::journey, plan = "faste
 
 tm_shape(routes_fast) + tm_lines()
 
+
+# PCT cycle uptake --------------------------------------------------------
+
+library(pct)
+routes_quiet_pct = routes_quiet |> 
+  mutate(pcycle_go_dutch = uptake_pct_godutch_school2(distance = distance, gradient = gradient_smooth),
+         bicycle_go_dutch = pcycle_go_dutch * n_students
+         )
+rnet_quiet = routes_quiet_pct |> 
+  overline(attrib = "bicycle_go_dutch")
+tm_shape(rnet_quiet) + tm_lines("bicycle_go_dutch", palette = "viridis", lwd = 2)
