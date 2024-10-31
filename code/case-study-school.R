@@ -156,28 +156,47 @@ tm_shape(routes_fast) + tm_lines()
 
 library(pct)
 
-# Pick one of these  
-routes = routes_quiet %>% group_by(route_number)
-routes = routes_fast %>% group_by(route_number)
-
-routes = routes %>% 
+# Quiet routes
+routes_quiet_pct = routes_quiet |> 
+  group_by(route_number) |> 
   mutate(
     pcycle_godutch = pct::uptake_pct_godutch_school2(
       case_when(length > 30000 ~ 30000, TRUE ~ length),
-      route_hilliness
-    ) 
-  )
-routes = routes %>% 
-  mutate(
+      route_hilliness),
     bicycle_godutch = pcycle_godutch * n_students
   )
 
-rnet_raw = routes |> 
+rnet_quiet_raw = routes_quiet_pct |> 
   overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
            fun = list(sum = sum, mean = mean))
-rnet = rnet_raw |> 
+rnet_quiet = rnet_quiet_raw |> 
   transmute(n_students = n_students_sum, 
             bicycle_godutch = bicycle_godutch_sum,
             quietness = round(quietness_mean),
             gradient = round(gradient_smooth_mean*100))
-tm_shape(rnet) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
+tm_shape(rnet_quiet) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
+
+
+# Fast routes
+routes_fast_pct = routes_fast |> 
+  group_by(route_number) |> 
+  mutate(
+    pcycle_godutch = pct::uptake_pct_godutch_school2(
+      case_when(length > 30000 ~ 30000, TRUE ~ length),
+      route_hilliness),
+    bicycle_godutch = pcycle_godutch * n_students
+  )
+
+rnet_fast_raw = routes_fast_pct |> 
+  overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
+           fun = list(sum = sum, mean = mean))
+rnet_fast = rnet_fast_raw |> 
+  transmute(n_students = n_students_sum, 
+            bicycle_godutch = bicycle_godutch_sum,
+            quietness = round(quietness_mean),
+            gradient = round(gradient_smooth_mean*100))
+tm_shape(rnet_fast) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
+
+# Explore results
+
+summary(rnet_quiet)
