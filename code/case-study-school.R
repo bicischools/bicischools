@@ -9,7 +9,7 @@ tmap_mode("view")
 
 schools_year = readRDS("data/SCHOOLS_year.Rds")
 existing = schools_year |> filter(DGEEC_id == 1106908)
-View(existing)
+# View(existing)
 sum(existing$STUDENTS)
 # [1] 110 # this is different from the case study dataset because it's from a different year
 
@@ -151,6 +151,11 @@ routes_quiet_pct = routes_quiet |>
   mutate(pcycle_go_dutch = uptake_pct_godutch_school2(distance = distance, gradient = gradient_smooth),
          bicycle_go_dutch = pcycle_go_dutch * n_students
          )
-rnet_quiet = routes_quiet_pct |> 
-  overline(attrib = "bicycle_go_dutch")
-tm_shape(rnet_quiet) + tm_lines("bicycle_go_dutch", palette = "viridis", lwd = 2)
+rnet_raw = routes_quiet_pct |> 
+  overline(attrib = c("bicycle_go_dutch", "quietness", "gradient_smooth"), 
+           fun = list(sum = sum, mean = mean))
+rnet = rnet_raw |> 
+  transmute(bicycle_go_dutch = bicycle_go_dutch_sum,
+            quietness = round(quietness_mean),
+            gradient = round(gradient_smooth_mean*100))
+tm_shape(rnet) + tm_lines("bicycle_go_dutch", palette = "viridis", lwd = 2)
