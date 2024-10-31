@@ -197,6 +197,33 @@ rnet_fast = rnet_fast_raw |>
             gradient = round(gradient_smooth_mean*100))
 tm_shape(rnet_fast) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
 
-# Explore results
 
-summary(rnet_quiet)
+# Explore results ---------------------------------------------------------
+
+summary(routes_quiet$length)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 144    2333    3669    4065    5387    9796 
+summary(routes_fast$length)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 144    1777    2903    3165    4532    6985 
+
+# Total number of students cycling to school under Go Dutch
+# Strangely, there are more cyclists under the quiet routes, even though the routes are longer
+sums = routes_quiet_pct |> 
+  group_by(route_number) |> 
+  summarise(bicycle_godutch = mean(bicycle_godutch))
+sum(sums$bicycle_godutch)
+# [1] 47.28846
+
+sums = routes_fast_pct |> 
+  group_by(route_number) |> 
+  summarise(bicycle_godutch = mean(bicycle_godutch))
+sum(sums$bicycle_godutch)
+# [1] 43.49924
+
+# Mean quietness of routes
+rnet_quiet = rnet_quiet |> 
+  mutate(quietness_cycled = quietness*bicycle_godutch)
+
+
+
