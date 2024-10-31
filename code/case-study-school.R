@@ -211,15 +211,32 @@ summary(routes_fast$length)
 # Strangely, there are more cyclists under the quiet routes, even though the routes are longer
 sums = routes_quiet_pct |> 
   group_by(route_number) |> 
-  summarise(bicycle_godutch = mean(bicycle_godutch))
+  summarise(n_students = mean(n_students),
+            bicycle_godutch = mean(bicycle_godutch),
+            length = mean(length)
+            )
+# n_cyclists under go dutch
 sum(sums$bicycle_godutch)
 # [1] 47.28846
 
+# median route length
+library(matrixStats)
+weightedMedian(sums$length, sums$n_students)
+# [1] 1068.333
+
 sums = routes_fast_pct |> 
   group_by(route_number) |> 
-  summarise(bicycle_godutch = mean(bicycle_godutch))
+  summarise(n_students = mean(n_students),
+            bicycle_godutch = mean(bicycle_godutch),
+            length = mean(length)
+            )
 sum(sums$bicycle_godutch)
 # [1] 43.49924
+
+# median route length
+library(matrixStats)
+weightedMedian(sums$length, sums$n_students)
+# [1] 1064
 
 # Mean quietness of routes
 rnet_quiet = rnet_quiet |> 
