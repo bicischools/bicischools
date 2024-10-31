@@ -136,10 +136,18 @@ od_5km = od_5km |>
 library(stplanr)
 
 routes_quiet = route(l = od_5km, route_fun = cyclestreets::journey, plan = "quietest")
+routes_quiet = routes_quiet |> 
+  group_by(route_number) |> 
+  mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
+  ungroup()
 
 tm_shape(routes_quiet) + tm_lines()
 
 routes_fast = route(l = od_5km, route_fun = cyclestreets::journey, plan = "fastest")
+routes_fast = routes_fast |> 
+  group_by(route_number) |> 
+  mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
+  ungroup()
 
 tm_shape(routes_fast) + tm_lines()
 
@@ -147,15 +155,29 @@ tm_shape(routes_fast) + tm_lines()
 # PCT cycle uptake --------------------------------------------------------
 
 library(pct)
-routes_quiet_pct = routes_quiet |> 
-  mutate(pcycle_go_dutch = uptake_pct_godutch_school2(distance = distance, gradient = gradient_smooth),
-         bicycle_go_dutch = pcycle_go_dutch * n_students
-         )
-rnet_raw = routes_quiet_pct |> 
-  overline(attrib = c("bicycle_go_dutch", "quietness", "gradient_smooth"), 
+
+# Pick one of these  
+routes = routes_quiet %>% group_by(route_number)
+routes = routes_fast %>% group_by(route_number)
+
+routes = routes %>% 
+  mutate(
+    pcycle_godutch = pct::uptake_pct_godutch_school2(
+      case_when(length > 30000 ~ 30000, TRUE ~ length),
+      route_hilliness
+    ) 
+  )
+routes = routes %>% 
+  mutate(
+    bicycle_godutch = pcycle_godutch * n_students
+  )
+
+rnet_raw = routes |> 
+  overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
            fun = list(sum = sum, mean = mean))
 rnet = rnet_raw |> 
-  transmute(bicycle_go_dutch = bicycle_go_dutch_sum,
+  transmute(n_students = n_students_sum, 
+            bicycle_godutch = bicycle_godutch_sum,
             quietness = round(quietness_mean),
             gradient = round(gradient_smooth_mean*100))
-tm_shape(rnet) + tm_lines("bicycle_go_dutch", palette = "viridis", lwd = 2)
+tm_shape(rnet) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
