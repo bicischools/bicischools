@@ -238,9 +238,25 @@ library(matrixStats)
 weightedMedian(sums$length, sums$n_students)
 # [1] 1064
 
-# Mean quietness of routes
+# Mean quietness of routes - not working yet
 rnet_quiet = rnet_quiet |> 
   mutate(quietness_cycled = quietness*bicycle_godutch)
 
 
+
+# Bundling function -------------------------------------------------------
+
+# set of routes + distance weighted number of cyclists on adjoining routes + minimum threshold 
+# need to identify when route segments have the same geometry
+
+routes_quiet_buffer = geo_buffer(routes_quiet, dist = 10)
+# tm_shape(routes_quiet_buffer) + tm_polygons()
+
+xxx = list()
+for(i in routes_quiet_buffer) {
+  # calculate sum(bicycle_go_dutch) for each rnet_quiet segment that lies within the buffer
+  yyy = rnet_quiet[i, ]
+  zzz = sum(yyy$bicycle_godutch)
+  xxx[i] = zzz
+}
 
