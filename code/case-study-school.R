@@ -135,11 +135,16 @@ od_5km = od_5km |>
 
 library(stplanr)
 
+routes_quiet_location = "../internal/routes-quiet-casestudy.Rds"
+if (file.exists(routes_quiet_location)) {
+  routes_quiet = readRDS(routes_quiet_location)
+} else {
 routes_quiet = route(l = od_5km, route_fun = cyclestreets::journey, plan = "quietest")
 routes_quiet = routes_quiet |> 
   group_by(route_number) |> 
   mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
   ungroup()
+}
 
 tm_shape(routes_quiet) + tm_lines()
 
