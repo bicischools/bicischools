@@ -146,15 +146,15 @@ routes_quiet = routes_quiet |>
   ungroup()
 }
 
-tm_shape(routes_quiet) + tm_lines()
+# tm_shape(routes_quiet) + tm_lines()
 
-routes_fast = route(l = od_5km, route_fun = cyclestreets::journey, plan = "fastest")
-routes_fast = routes_fast |> 
-  group_by(route_number) |> 
-  mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
-  ungroup()
+# routes_fast = route(l = od_5km, route_fun = cyclestreets::journey, plan = "fastest")
+# routes_fast = routes_fast |> 
+#   group_by(route_number) |> 
+#   mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
+#   ungroup()
 
-tm_shape(routes_fast) + tm_lines()
+# tm_shape(routes_fast) + tm_lines()
 
 
 # PCT cycle uptake --------------------------------------------------------
