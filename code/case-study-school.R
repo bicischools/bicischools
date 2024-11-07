@@ -277,6 +277,10 @@ cycle_bus_routes = function(
   rnet_union = sf::st_union(rnet_subset)
   rnet_buffer = geo_buffer(rnet_union, dist = buffer)
   routes_subset = sf::st_intersection(routes, rnet_buffer)
+  routes_subset = routes_subset |> 
+    distinct(geometry)
+  routes_subset$length = sf::st_length(routes_subset) |> 
+    as.numeric()
   attribute_trips_mean = paste0(attribute_trips, "_mean")
   routes_subset[[attribute_trips_mean]] = NA
   class(routes_subset[[attribute_trips_mean]]) = "numeric"
@@ -284,7 +288,7 @@ cycle_bus_routes = function(
     route_i = routes_subset[i,]
     route_i_buffer = geo_buffer(route_i, dist = buffer)
     rnet_in_route = rnet_subset[route_i_buffer, , op = sf::st_within]
-    routes_subset[i, attribute_trips_mean] = weighted.mean(rnet_in_route[[attribute_trips]], rnet_in_route$length)
+    routes_subset[i, attribute_trips_mean] = weighted.mean(rnet_in_route[[attribute_trips]], rnet_in_route$length)*routes_subset[i,]$length
   }
   routes_subset = routes_subset[order(-routes_subset[[attribute_trips_mean]]),]
   # Find the routes with the least unique parts
@@ -293,4 +297,4 @@ cycle_bus_routes = function(
 }
 # Test out our new function:
 top_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10, top_n = 3)
-plot(top_routes)
+tm_shape(top_routes) + tm_lines()
