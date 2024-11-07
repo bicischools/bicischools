@@ -162,6 +162,9 @@ routes_quiet = routes_quiet |>
 library(pct)
 
 # Quiet routes
+class(routes_quiet$route_number) = "character"
+class(routes_quiet$length) = "numeric"
+class(routes_quiet$quietness) = "numeric"
 routes_quiet_pct = routes_quiet |> 
   group_by(route_number) |> 
   mutate(
@@ -179,28 +182,29 @@ rnet_quiet = rnet_quiet_raw |>
             bicycle_godutch = bicycle_godutch_sum,
             quietness = round(quietness_mean),
             gradient = round(gradient_smooth_mean*100))
-tm_shape(rnet_quiet) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
+tm_shape(rnet_quiet) +
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 
 
-# Fast routes
-routes_fast_pct = routes_fast |> 
-  group_by(route_number) |> 
-  mutate(
-    pcycle_godutch = pct::uptake_pct_godutch_school2(
-      case_when(length > 30000 ~ 30000, TRUE ~ length),
-      route_hilliness),
-    bicycle_godutch = pcycle_godutch * n_students
-  )
+# # Fast routes
+# routes_fast_pct = routes_fast |> 
+#   group_by(route_number) |> 
+#   mutate(
+#     pcycle_godutch = pct::uptake_pct_godutch_school2(
+#       case_when(length > 30000 ~ 30000, TRUE ~ length),
+#       route_hilliness),
+#     bicycle_godutch = pcycle_godutch * n_students
+#   )
 
-rnet_fast_raw = routes_fast_pct |> 
-  overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
-           fun = list(sum = sum, mean = mean))
-rnet_fast = rnet_fast_raw |> 
-  transmute(n_students = n_students_sum, 
-            bicycle_godutch = bicycle_godutch_sum,
-            quietness = round(quietness_mean),
-            gradient = round(gradient_smooth_mean*100))
-tm_shape(rnet_fast) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
+# rnet_fast_raw = routes_fast_pct |> 
+#   overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
+#            fun = list(sum = sum, mean = mean))
+# rnet_fast = rnet_fast_raw |> 
+#   transmute(n_students = n_students_sum, 
+#             bicycle_godutch = bicycle_godutch_sum,
+#             quietness = round(quietness_mean),
+#             gradient = round(gradient_smooth_mean*100))
+# tm_shape(rnet_fast) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
 
 
 # Explore results ---------------------------------------------------------
@@ -208,39 +212,39 @@ tm_shape(rnet_fast) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
 summary(routes_quiet$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 # 144    2333    3669    4065    5387    9796 
-summary(routes_fast$length)
+# summary(routes_fast$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 # 144    1777    2903    3165    4532    6985 
 
 # Total number of students cycling to school under Go Dutch
 # Strangely, there are more cyclists under the quiet routes, even though the routes are longer
-sums = routes_quiet_pct |> 
+route_summaries = routes_quiet_pct |> 
   group_by(route_number) |> 
   summarise(n_students = mean(n_students),
             bicycle_godutch = mean(bicycle_godutch),
             length = mean(length)
             )
 # n_cyclists under go dutch
-sum(sums$bicycle_godutch)
+sum(route_summaries$bicycle_godutch)
 # [1] 47.28846
 
 # median route length
 library(matrixStats)
-weightedMedian(sums$length, sums$n_students)
+weightedMedian(route_summaries$length, route_summaries$n_students)
 # [1] 1068.333
 
-sums = routes_fast_pct |> 
-  group_by(route_number) |> 
-  summarise(n_students = mean(n_students),
-            bicycle_godutch = mean(bicycle_godutch),
-            length = mean(length)
-            )
-sum(sums$bicycle_godutch)
-# [1] 43.49924
+# route_summaries = routes_fast_pct |> 
+#   group_by(route_number) |> 
+#   summarise(n_students = mean(n_students),
+#             bicycle_godutch = mean(bicycle_godutch),
+#             length = mean(length)
+#             )
+# sum(route_summaries$bicycle_godutch)
+# # [1] 43.49924
 
 # median route length
 library(matrixStats)
-weightedMedian(sums$length, sums$n_students)
+weightedMedian(route_summaries$length, route_summaries$n_students)
 # [1] 1064
 
 # Mean quietness of routes - not working yet
@@ -254,14 +258,39 @@ rnet_quiet = rnet_quiet |>
 # set of routes + distance weighted number of cyclists on adjoining routes + minimum threshold 
 # need to identify when route segments have the same geometry
 
-routes_quiet_buffer = geo_buffer(routes_quiet, dist = 10)
 # tm_shape(routes_quiet_buffer) + tm_polygons()
-
-xxx = list()
-for(i in routes_quiet_buffer) {
-  # calculate sum(bicycle_go_dutch) for each rnet_quiet segment that lies within the buffer
-  yyy = rnet_quiet[i, ]
-  zzz = sum(yyy$bicycle_godutch)
-  xxx[i] = zzz
+rnet = rnet_quiet
+routes = route_summaries
+attribute_trips = "bicycle_godutch"
+cycle_bus_routes = function(
+  routes,
+  rnet,
+  min_trips = 3,
+  attribute_trips = "bicycle_godutch",
+  buffer = 10,
+  top_n = 3
+) {
+  i = 1 # for testing
+  rnet_subset = rnet[rnet[[attribute_trips]] > min_trips,]
+  rnet_subset$length = sf::st_length(rnet_subset) |>
+    as.numeric()
+  rnet_union = sf::st_union(rnet_subset)
+  rnet_buffer = geo_buffer(rnet_union, dist = buffer)
+  routes_subset = sf::st_intersection(routes, rnet_buffer)
+  attribute_trips_mean = paste0(attribute_trips, "_mean")
+  routes_subset[[attribute_trips_mean]] = NA
+  class(routes_subset[[attribute_trips_mean]]) = "numeric"
+  for (i in 1:nrow(routes_subset)) {
+    route_i = routes_subset[i,]
+    route_i_buffer = geo_buffer(route_i, dist = buffer)
+    rnet_in_route = rnet_subset[route_i_buffer, , op = sf::st_within]
+    routes_subset[i, attribute_trips_mean] = weighted.mean(rnet_in_route[[attribute_trips]], rnet_in_route$length)
+  }
+  routes_subset = routes_subset[order(-routes_subset[[attribute_trips_mean]]),]
+  # Find the routes with the least unique parts
+  routes_subset_top = routes_subset[1:top_n,]
+  routes_subset_top  
 }
-
+# Test out our new function:
+top_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10, top_n = 3)
+plot(top_routes)
