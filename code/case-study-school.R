@@ -290,11 +290,44 @@ cycle_bus_routes = function(
     rnet_in_route = rnet_subset[route_i_buffer, , op = sf::st_within]
     routes_subset[i, attribute_trips_mean] = weighted.mean(rnet_in_route[[attribute_trips]], rnet_in_route$length)*routes_subset[i,]$length
   }
-  routes_subset = routes_subset[order(-routes_subset[[attribute_trips_mean]]),]
-  # Find the routes with the least unique parts
-  routes_subset_top = routes_subset[1:top_n,]
-  routes_subset_top  
+  routes_subset = routes_subset[order(routes_subset[[attribute_trips_mean]]),]
+  routes_subset
 }
+
 # Test out our new function:
-top_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10, top_n = 3)
-tm_shape(top_routes) + tm_lines()
+ordered_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10, top_n = 3)
+
+# Remove routes with start points too close to other higher ranked routes
+
+routes = ordered_routes
+selected_routes = nrow(routes)
+filter_routes = function(
+    routes,
+    buffer,
+    top_n
+) {
+  i = 1
+  z = nrow(routes)-1
+  for(i in 1:z) {
+    route_i = routes[i, ]
+    p = st_cast(route_i$geometry, "POINT")
+    p1 = p[1]
+    better_routes = routes |> 
+      slice_tail(n = nrow(routes)-i)
+    better_routes_union = sf::st_union(better_routes)
+    distance = units::drop_units(sf::st_distance(p1, better_routes_union))
+    if(distance > buffer) {
+      selected_routes = c(selected_routes, i)
+    }
+    selected_routes
+  }
+  routes_subset = routes[selected_routes, ]
+  routes_subset = routes_subset[order(-routes_subset[[attribute_trips_mean]]),]
+  routes_subset = routes_subset |> 
+    slice_head(n = top_n)
+  routes_subset
+}
+
+top_routes = filter_routes(routes, buffer = 500, top_n = 3)
+# tm_shape(top_routes) + tm_lines()
+
