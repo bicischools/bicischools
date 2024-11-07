@@ -267,8 +267,7 @@ cycle_bus_routes = function(
   rnet,
   min_trips = 3,
   attribute_trips = "bicycle_godutch",
-  buffer = 10,
-  top_n = 3
+  buffer = 10
 ) {
   i = 1 # for testing
   rnet_subset = rnet[rnet[[attribute_trips]] > min_trips,]
@@ -294,8 +293,9 @@ cycle_bus_routes = function(
   routes_subset
 }
 
-# Test out our new function:
-ordered_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10, top_n = 3)
+# Get all routes within min_trips rnet, ordered by length*mean_godutch
+ordered_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10)
+
 
 # Remove routes with start points too close to other higher ranked routes
 
