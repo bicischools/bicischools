@@ -296,6 +296,7 @@ cycle_bus_routes = function(
 # Get all routes within min_trips rnet, ordered by length*mean_godutch
 ordered_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10)
 
+tm_shape(ordered_routes) + tm_lines()
 
 # Remove routes with start points too close to other higher ranked routes
 
@@ -329,5 +330,7 @@ filter_routes = function(
 }
 
 top_routes = filter_routes(routes, buffer = 500, top_n = 3)
-# tm_shape(top_routes) + tm_lines()
+
+tm_shape(top_routes) + tm_lines() +
+  tm_shape(centroids_5km) + tm_bubbles("n_students")
 
