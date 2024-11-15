@@ -145,6 +145,11 @@ routes_quiet = routes_quiet |>
   mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
   ungroup()
 }
+class(routes_quiet$route_number) = "character"
+class(routes_quiet$length) = "numeric"
+class(routes_quiet$quietness) = "numeric"
+routes_quiet = routes_quiet |> 
+  filter(length < 5000)
 
 # tm_shape(routes_quiet) + tm_lines()
 
@@ -162,9 +167,6 @@ routes_quiet = routes_quiet |>
 library(pct)
 
 # Quiet routes
-class(routes_quiet$route_number) = "character"
-class(routes_quiet$length) = "numeric"
-class(routes_quiet$quietness) = "numeric"
 routes_quiet_pct = routes_quiet |> 
   group_by(route_number) |> 
   mutate(
@@ -183,7 +185,8 @@ rnet_quiet = rnet_quiet_raw |>
             quietness = round(quietness_mean),
             gradient = round(gradient_smooth_mean*100))
 tm_shape(rnet_quiet) +
-  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
+  tm_shape(centroids_5km) + tm_bubbles("n_students")
 
 
 # # Fast routes
@@ -211,10 +214,12 @@ tm_shape(rnet_quiet) +
 
 summary(routes_quiet$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# 144    2333    3669    4065    5387    9796 
+# 144    1890    3024    2909    3856    4967 
 # summary(routes_fast$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 # 144    1777    2903    3165    4532    6985 
+
+
 
 # Total number of students cycling to school under Go Dutch
 # Strangely, there are more cyclists under the quiet routes, even though the routes are longer
@@ -224,14 +229,17 @@ route_summaries = routes_quiet_pct |>
             bicycle_godutch = mean(bicycle_godutch),
             length = mean(length)
             )
+# n students within 5km route distance of school
+sum(route_summaries$n_students)
+# [1] 140
 # n_cyclists under go dutch
 sum(route_summaries$bicycle_godutch)
-# [1] 47.28846
+# [1] 40.38902
 
 # median route length
 library(matrixStats)
 weightedMedian(route_summaries$length, route_summaries$n_students)
-# [1] 1068.333
+# [1] 928.2857
 
 # route_summaries = routes_fast_pct |> 
 #   group_by(route_number) |> 
@@ -329,7 +337,7 @@ filter_routes = function(
   routes_subset
 }
 
-top_routes = filter_routes(routes, buffer = 500, top_n = 3)
+top_routes = filter_routes(routes, buffer = 300, top_n = 3)
 
 tm_shape(top_routes) + tm_lines() +
   tm_shape(centroids_5km) + tm_bubbles("n_students")
