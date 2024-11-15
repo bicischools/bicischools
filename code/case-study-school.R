@@ -251,7 +251,6 @@ weightedMedian(route_summaries$length, route_summaries$n_students)
 # # [1] 43.49924
 
 # median route length
-library(matrixStats)
 weightedMedian(route_summaries$length, route_summaries$n_students)
 # [1] 1064
 
@@ -331,7 +330,7 @@ filter_routes = function(
     selected_routes
   }
   routes_subset = routes[selected_routes, ]
-  routes_subset = routes_subset[order(-routes_subset[[attribute_trips_mean]]),]
+  routes_subset = routes_subset[order(-routes_subset[["bicycle_godutch_mean"]]),]
   routes_subset = routes_subset |> 
     slice_head(n = top_n)
   routes_subset
