@@ -178,6 +178,7 @@ for(plan in plans) {
         route_hilliness),
       bicycle_godutch = pcycle_godutch * n_students
     )
+  assign(paste0("routes_", plan, "_pct"), routes_plan_pct)
   rnet_plan_raw = routes_plan_pct |> 
     overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
              fun = list(sum = sum, mean = mean))
@@ -206,21 +207,30 @@ summary(routes_fast$length)
 # 144    1496    2525    2680    3637    4918 
 
 
-
 # Total number of students cycling to school under Go Dutch
 # Strangely, there are more cyclists under the quiet routes, even though the routes are longer
-route_summaries = routes_quiet_pct |> 
-  group_by(route_number) |> 
-  summarise(n_students = mean(n_students),
-            bicycle_godutch = mean(bicycle_godutch),
-            length = mean(length)
-            )
+for(plan in plans) {
+  routes_plan_pct = get(paste0("routes_", plan, "_pct"))
+  route_summaries = routes_plan_pct |> 
+    group_by(route_number) |> 
+    summarise(n_students = mean(n_students),
+              bicycle_godutch = mean(bicycle_godutch),
+              length = mean(length)
+    )
+  assign(paste0("route_summaries_", plan), route_summaries)
+}
+
 # n students within 5km route distance of school
-sum(route_summaries$n_students)
+sum(route_summaries_quiet$n_students)
 # [1] 140
+sum(route_summaries_fast$n_students)
+# [1] 148
+
 # n_cyclists under go dutch
-sum(route_summaries$bicycle_godutch)
+sum(route_summaries_quiet$bicycle_godutch)
 # [1] 40.38902
+sum(route_summaries_fast$bicycle_godutch)
+# [1] 40.52007
 
 # median route length
 library(matrixStats)
