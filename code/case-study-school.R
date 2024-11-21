@@ -134,24 +134,29 @@ od_5km = od_5km |>
 # Route trips from zone centroids to school -------------------------------
 
 library(stplanr)
+plan = "quiet"
 
-routes_quiet_location = "../internal/routes-quiet-casestudy.Rds"
-if (file.exists(routes_quiet_location)) {
-  routes_quiet = readRDS(routes_quiet_location)
-} else {
-routes_quiet = route(l = od_5km, route_fun = cyclestreets::journey, plan = "quietest")
-routes_quiet = routes_quiet |> 
-  group_by(route_number) |> 
-  mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
-  ungroup()
+for(plan in c("quiet", "fast")) {
+  location = paste0("../internal/routes-", plan, "-casestudy.Rds")
+  routes_plan_location = location
+  if (file.exists(routes_plan_location)) {
+    routes_plan = readRDS(routes_plan_location)
+  } else {
+    routes_plan = route(l = od_5km, route_fun = cyclestreets::journey, plan = "quietest")
+    routes_plan = routes_plan |> 
+      group_by(route_number) |> 
+      mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
+      ungroup()
+  }
+  class(routes_plan$route_number) = "character"
+  class(routes_plan$length) = "numeric"
+  class(routes_plan$quietness) = "numeric"
+  routes_plan = routes_plan |> 
+    filter(length < 5000) 
+  assign(x = paste0("routes_", plan), value = routes_plan)
 }
-class(routes_quiet$route_number) = "character"
-class(routes_quiet$length) = "numeric"
-class(routes_quiet$quietness) = "numeric"
-routes_quiet = routes_quiet |> 
-  filter(length < 5000)
 
-# tm_shape(routes_quiet) + tm_lines()
+# tm_shape(routes_plan) + tm_lines()
 
 # routes_fast = route(l = od_5km, route_fun = cyclestreets::journey, plan = "fastest")
 # routes_fast = routes_fast |> 
