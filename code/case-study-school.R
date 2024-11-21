@@ -135,18 +135,21 @@ od_5km = od_5km |>
 
 library(stplanr)
 plan = "quiet"
+plans = c("quiet", "fast")
 
-for(plan in c("quiet", "fast")) {
+for(plan in plans) {
   location = paste0("../internal/routes-", plan, "-casestudy.Rds")
   routes_plan_location = location
   if (file.exists(routes_plan_location)) {
     routes_plan = readRDS(routes_plan_location)
   } else {
-    routes_plan = route(l = od_5km, route_fun = cyclestreets::journey, plan = "quietest")
+    plan_name = paste0(plan, "est")
+    routes_plan = route(l = od_5km, route_fun = cyclestreets::journey, plan = plan_name)
     routes_plan = routes_plan |> 
       group_by(route_number) |> 
       mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
       ungroup()
+    saveRDS(routes_plan, paste0("../internal/routes-", plan, "-casestudy.Rds"))
   }
   class(routes_plan$route_number) = "character"
   class(routes_plan$length) = "numeric"
@@ -156,14 +159,7 @@ for(plan in c("quiet", "fast")) {
   assign(x = paste0("routes_", plan), value = routes_plan)
 }
 
-# tm_shape(routes_plan) + tm_lines()
-
-# routes_fast = route(l = od_5km, route_fun = cyclestreets::journey, plan = "fastest")
-# routes_fast = routes_fast |> 
-#   group_by(route_number) |> 
-#   mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
-#   ungroup()
-
+# tm_shape(routes_quiet) + tm_lines()
 # tm_shape(routes_fast) + tm_lines()
 
 
@@ -172,57 +168,42 @@ for(plan in c("quiet", "fast")) {
 library(pct)
 
 # Quiet routes
-routes_quiet_pct = routes_quiet |> 
-  group_by(route_number) |> 
-  mutate(
-    pcycle_godutch = pct::uptake_pct_godutch_school2(
-      case_when(length > 30000 ~ 30000, TRUE ~ length),
-      route_hilliness),
-    bicycle_godutch = pcycle_godutch * n_students
-  )
+for(plan in plans) {
+  routes_plan = get(x = paste0("routes_", plan))
+  routes_plan_pct = routes_plan |> 
+    group_by(route_number) |> 
+    mutate(
+      pcycle_godutch = pct::uptake_pct_godutch_school2(
+        case_when(length > 30000 ~ 30000, TRUE ~ length),
+        route_hilliness),
+      bicycle_godutch = pcycle_godutch * n_students
+    )
+  rnet_plan_raw = routes_plan_pct |> 
+    overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
+             fun = list(sum = sum, mean = mean))
+  rnet_plan = rnet_plan_raw |> 
+    transmute(n_students = n_students_sum, 
+              bicycle_godutch = bicycle_godutch_sum,
+              quietness = round(quietness_mean),
+              gradient = round(gradient_smooth_mean*100))
+  assign(x = paste0("rnet_", plan), value = rnet_plan)
+}
 
-rnet_quiet_raw = routes_quiet_pct |> 
-  overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
-           fun = list(sum = sum, mean = mean))
-rnet_quiet = rnet_quiet_raw |> 
-  transmute(n_students = n_students_sum, 
-            bicycle_godutch = bicycle_godutch_sum,
-            quietness = round(quietness_mean),
-            gradient = round(gradient_smooth_mean*100))
 tm_shape(rnet_quiet) +
   tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
   tm_shape(centroids_5km) + tm_bubbles("n_students")
-
-
-# # Fast routes
-# routes_fast_pct = routes_fast |> 
-#   group_by(route_number) |> 
-#   mutate(
-#     pcycle_godutch = pct::uptake_pct_godutch_school2(
-#       case_when(length > 30000 ~ 30000, TRUE ~ length),
-#       route_hilliness),
-#     bicycle_godutch = pcycle_godutch * n_students
-#   )
-
-# rnet_fast_raw = routes_fast_pct |> 
-#   overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
-#            fun = list(sum = sum, mean = mean))
-# rnet_fast = rnet_fast_raw |> 
-#   transmute(n_students = n_students_sum, 
-#             bicycle_godutch = bicycle_godutch_sum,
-#             quietness = round(quietness_mean),
-#             gradient = round(gradient_smooth_mean*100))
-# tm_shape(rnet_fast) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2)
-
+tm_shape(rnet_fast) +
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
+  tm_shape(centroids_5km) + tm_bubbles("n_students")
 
 # Explore results ---------------------------------------------------------
 
 summary(routes_quiet$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 # 144    1890    3024    2909    3856    4967 
-# summary(routes_fast$length)
+summary(routes_fast$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# 144    1777    2903    3165    4532    6985 
+# 144    1496    2525    2680    3637    4918 
 
 
 
