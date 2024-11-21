@@ -154,6 +154,7 @@ for(plan in plans) {
   class(routes_plan$route_number) = "character"
   class(routes_plan$length) = "numeric"
   class(routes_plan$quietness) = "numeric"
+  assign(paste0("routes_", plan, "_all"), routes_plan)
   routes_plan = routes_plan |> 
     filter(length < 5000) 
   assign(x = paste0("routes_", plan), value = routes_plan)
@@ -162,12 +163,28 @@ for(plan in plans) {
 # tm_shape(routes_quiet) + tm_lines()
 # tm_shape(routes_fast) + tm_lines()
 
+# For median route lengths
+for(plan in plans) {
+  routes_plan_all = get(paste0("routes_", plan, "_all"))
+  route_summaries = routes_plan_all |> 
+    group_by(route_number) |> 
+    summarise(n_students = mean(n_students),
+              length = mean(length)
+    )
+  assign(paste0("route_summaries_all_", plan), route_summaries)
+}
+
+# median route length
+library(matrixStats)
+weightedMedian(route_summaries_all_quiet$length, route_summaries_all_quiet$n_students)
+# [1] 1068.333
+weightedMedian(route_summaries_all_fast$length, route_summaries_all_fast$n_students)
+# [1] 1064
 
 # PCT cycle uptake --------------------------------------------------------
 
 library(pct)
 
-# Quiet routes
 for(plan in plans) {
   routes_plan = get(x = paste0("routes_", plan))
   routes_plan_pct = routes_plan |> 
@@ -232,23 +249,6 @@ sum(route_summaries_quiet$bicycle_godutch)
 sum(route_summaries_fast$bicycle_godutch)
 # [1] 40.52007
 
-# median route length
-library(matrixStats)
-weightedMedian(route_summaries$length, route_summaries$n_students)
-# [1] 928.2857
-
-# route_summaries = routes_fast_pct |> 
-#   group_by(route_number) |> 
-#   summarise(n_students = mean(n_students),
-#             bicycle_godutch = mean(bicycle_godutch),
-#             length = mean(length)
-#             )
-# sum(route_summaries$bicycle_godutch)
-# # [1] 43.49924
-
-# median route length
-weightedMedian(route_summaries$length, route_summaries$n_students)
-# [1] 1064
 
 # Mean quietness of routes - not working yet
 rnet_quiet = rnet_quiet |> 
