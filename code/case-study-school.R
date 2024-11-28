@@ -120,6 +120,8 @@ centroids_5km = zone_centroids |>
 
 tm_shape(centroids_5km) + tm_dots()
 
+saveRDS(centroids_5km, "data/centroids_5km.Rds")
+
 od_5km = centroids_5km |>
   mutate(d = school$geometry)
 
@@ -240,11 +242,13 @@ summary(routes_fast$length)
 for(plan in plans) {
   routes_plan_pct = get(paste0("routes_", plan, "_pct"))
   route_summaries = routes_plan_pct |> 
-    group_by(route_number) |> 
-    summarise(n_students = mean(n_students),
-              bicycle_godutch = mean(bicycle_godutch),
-              length = mean(length)
-    )
+    group_by(OBJECTID,
+             route_number, 
+             n_students, 
+             bicycle_godutch, 
+             length
+             ) |> 
+    summarise()
   assign(paste0("route_summaries_", plan), route_summaries)
 }
 
@@ -289,6 +293,7 @@ cycle_bus_routes = function(
   rnet_union = sf::st_union(rnet_subset)
   rnet_buffer = geo_buffer(rnet_union, dist = buffer)
   routes_subset = sf::st_intersection(routes, rnet_buffer)
+  # now identify which centroid OBJECTIDs are associated with which selected routes
   routes_subset = routes_subset |> 
     distinct(geometry)
   routes_subset$length = sf::st_length(routes_subset) |> 
@@ -348,9 +353,14 @@ filter_routes = function(
 top_routes_quiet = filter_routes(routes = ordered_routes_quiet, buffer = 300, top_n = 3)
 top_routes_fast = filter_routes(routes = ordered_routes_fast, buffer = 300, top_n = 3)
 
+centroids_quiet_5km = centroids_5km |> 
+  filter(OBJECTID %in% route_summaries_quiet$OBJECTID)
+centroids_fast_5km = centroids_5km |> 
+  filter(OBJECTID %in% route_summaries_fast$OBJECTID)
+
 tm_shape(top_routes_quiet) + tm_lines() +
-  tm_shape(centroids_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_quiet_5km) + tm_bubbles("n_students")
 tm_shape(top_routes_fast) + tm_lines() +
-  tm_shape(centroids_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_fast_5km) + tm_bubbles("n_students")
 
 # Could also add feature to function so routes are penalised if students live far away from the route origin?
