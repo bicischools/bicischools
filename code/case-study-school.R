@@ -248,7 +248,8 @@ for(plan in plans) {
              bicycle_godutch, 
              length
              ) |> 
-    summarise()
+    summarise() |> 
+    ungroup()
   assign(paste0("route_summaries_", plan), route_summaries)
 }
 
@@ -353,14 +354,26 @@ filter_routes = function(
 top_routes_quiet = filter_routes(routes = ordered_routes_quiet, buffer = 300, top_n = 3)
 top_routes_fast = filter_routes(routes = ordered_routes_fast, buffer = 300, top_n = 3)
 
-centroids_quiet_5km = centroids_5km |> 
-  filter(OBJECTID %in% route_summaries_quiet$OBJECTID)
-centroids_fast_5km = centroids_5km |> 
-  filter(OBJECTID %in% route_summaries_fast$OBJECTID)
+quiet_join = route_summaries_quiet |> 
+  sf::st_drop_geometry() |> 
+  select(OBJECTID, route_number, bicycle_godutch)
+centroids_quiet_5km = inner_join(centroids_5km, quiet_join, by = "OBJECTID")
 
+fast_join = route_summaries_fast |> 
+  sf::st_drop_geometry() |> 
+  select(OBJECTID, route_number, bicycle_godutch)
+centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
+
+# Bubbles by number of students
 tm_shape(top_routes_quiet) + tm_lines() +
   tm_shape(centroids_quiet_5km) + tm_bubbles("n_students")
 tm_shape(top_routes_fast) + tm_lines() +
   tm_shape(centroids_fast_5km) + tm_bubbles("n_students")
+
+# Bubbles by Go Dutch uptake
+tm_shape(top_routes_quiet) + tm_lines() +
+  tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch")
+tm_shape(top_routes_fast) + tm_lines() +
+  tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch")
 
 # Could also add feature to function so routes are penalised if students live far away from the route origin?
