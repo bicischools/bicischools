@@ -298,16 +298,16 @@ cycle_bus_routes = function(
     distinct(geometry)
   routes_subset$length = sf::st_length(routes_subset) |> 
     as.numeric()
-  attribute_trips_mean = paste0(attribute_trips, "_mean")
-  routes_subset[[attribute_trips_mean]] = NA
-  class(routes_subset[[attribute_trips_mean]]) = "numeric"
+  attribute_trips_x_distance = paste0(attribute_trips, "_x_distance")
+  routes_subset[[attribute_trips_x_distance]] = NA
+  class(routes_subset[[attribute_trips_x_distance]]) = "numeric"
   for (i in 1:nrow(routes_subset)) {
     route_i = routes_subset[i,]
     route_i_buffer = geo_buffer(route_i, dist = buffer)
     rnet_in_route = rnet_subset[route_i_buffer, , op = sf::st_within]
-    routes_subset[i, attribute_trips_mean] = weighted.mean(rnet_in_route[[attribute_trips]], rnet_in_route$length)*routes_subset[i,]$length
+    routes_subset[i, attribute_trips_x_distance] = weighted.mean(rnet_in_route[[attribute_trips]], rnet_in_route$length)*routes_subset[i,]$length
   }
-  routes_subset = routes_subset[order(routes_subset[[attribute_trips_mean]]),]
+  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]]),]
   routes_subset
 }
 
@@ -344,7 +344,7 @@ filter_routes = function(
     selected_routes
   }
   routes_subset = routes[selected_routes, ]
-  routes_subset = routes_subset[order(-routes_subset[["bicycle_godutch_mean"]]),]
+  routes_subset = routes_subset[order(-routes_subset[["bicycle_godutch_x_distance"]]),]
   routes_subset = routes_subset |> 
     slice_head(n = top_n)
   routes_subset
