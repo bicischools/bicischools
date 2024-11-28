@@ -169,7 +169,8 @@ for(plan in plans) {
   route_summaries = routes_plan_all |> 
     group_by(route_number) |> 
     summarise(n_students = mean(n_students),
-              length = mean(length)
+              length = mean(length),
+              desire_line_length = mean(desire_line_length)
     )
   assign(paste0("route_summaries_all_", plan), route_summaries)
 }
@@ -180,6 +181,17 @@ weightedMedian(route_summaries_all_quiet$length, route_summaries_all_quiet$n_stu
 # [1] 1068.333
 weightedMedian(route_summaries_all_fast$length, route_summaries_all_fast$n_students)
 # [1] 1064
+
+# median desire line length
+library(matrixStats)
+weightedMedian(route_summaries_all_quiet$desire_line_length, route_summaries_all_quiet$n_students)
+# [1] 552.1148
+
+# students within 5km 
+under_5 = route_summaries_all_quiet |> 
+  filter(desire_line_length < 5000)
+sum(under_5$n_students)
+# [1] 153
 
 # PCT cycle uptake --------------------------------------------------------
 
@@ -225,7 +237,6 @@ summary(routes_fast$length)
 
 
 # Total number of students cycling to school under Go Dutch
-# Strangely, there are more cyclists under the quiet routes, even though the routes are longer
 for(plan in plans) {
   routes_plan_pct = get(paste0("routes_", plan, "_pct"))
   route_summaries = routes_plan_pct |> 
@@ -247,7 +258,7 @@ sum(route_summaries_fast$n_students)
 sum(route_summaries_quiet$bicycle_godutch)
 # [1] 40.38902
 sum(route_summaries_fast$bicycle_godutch)
-# [1] 40.52007
+# [1] 40.47256
 
 
 # Mean quietness of routes - not working yet
