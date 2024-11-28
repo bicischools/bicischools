@@ -223,10 +223,12 @@ for(plan in plans) {
 
 tm_shape(rnet_quiet) +
   tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
-  tm_shape(centroids_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_5km) + tm_bubbles("n_students") +
+  tm_shape(school) + tm_bubbles(fill = "green")
 tm_shape(rnet_fast) +
   tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
-  tm_shape(centroids_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_5km) + tm_bubbles("n_students") +
+  tm_shape(school) + tm_bubbles(fill = "green")
 
 # Explore results ---------------------------------------------------------
 
@@ -283,7 +285,7 @@ attribute_trips = "bicycle_godutch"
 cycle_bus_routes = function(
     routes,
     rnet,
-    min_trips = 3,
+    min_trips = 2,
     attribute_trips = "bicycle_godutch",
     buffer = 10
 ) {
@@ -315,7 +317,7 @@ cycle_bus_routes = function(
 
 # Get all routes within min_trips rnet, ordered by length*mean_godutch
 ordered_routes_quiet = cycle_bus_routes(route_summaries_quiet, rnet_quiet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10)
-ordered_routes_fast = cycle_bus_routes(route_summaries_fast, rnet_fast, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10)
+ordered_routes_fast = cycle_bus_routes(route_summaries_fast, rnet_fast, min_trips = 2, attribute_trips = "bicycle_godutch", buffer = 10)
 
 tm_shape(ordered_routes_quiet) + tm_lines()
 tm_shape(ordered_routes_fast) + tm_lines()
@@ -372,8 +374,10 @@ tm_shape(top_routes_fast) + tm_lines() +
 
 # Bubbles by Go Dutch uptake
 tm_shape(top_routes_quiet) + tm_lines() +
-  tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch")
+  tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch") + 
+  tm_shape(school) + tm_bubbles(fill = "green")
 tm_shape(top_routes_fast) + tm_lines() +
-  tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch")
+  tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch") + 
+  tm_shape(school) + tm_bubbles(fill = "green")
 
 # Could also add feature to function so routes are penalised if students live far away from the route origin?
