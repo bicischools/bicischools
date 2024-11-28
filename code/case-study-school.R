@@ -269,19 +269,18 @@ rnet_quiet = rnet_quiet |>
 
 # Bundling function -------------------------------------------------------
 
-# set of routes + distance weighted number of cyclists on adjoining routes + minimum threshold 
-# need to identify when route segments have the same geometry
+# set of routes + (distance weighted number of cyclists on adjoining routes * route length within cropped zone) + minimum threshold 
+# buffer identifies when route segments have the same geometry
 
-# tm_shape(routes_quiet_buffer) + tm_polygons()
 rnet = rnet_quiet
-routes = route_summaries
+routes = route_summaries_quiet
 attribute_trips = "bicycle_godutch"
 cycle_bus_routes = function(
-  routes,
-  rnet,
-  min_trips = 3,
-  attribute_trips = "bicycle_godutch",
-  buffer = 10
+    routes,
+    rnet,
+    min_trips = 3,
+    attribute_trips = "bicycle_godutch",
+    buffer = 10
 ) {
   i = 1 # for testing
   rnet_subset = rnet[rnet[[attribute_trips]] > min_trips,]
@@ -307,14 +306,17 @@ cycle_bus_routes = function(
   routes_subset
 }
 
-# Get all routes within min_trips rnet, ordered by length*mean_godutch
-ordered_routes = cycle_bus_routes(routes, rnet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10)
 
-tm_shape(ordered_routes) + tm_lines()
+# Get all routes within min_trips rnet, ordered by length*mean_godutch
+ordered_routes_quiet = cycle_bus_routes(route_summaries_quiet, rnet_quiet, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10)
+ordered_routes_fast = cycle_bus_routes(route_summaries_fast, rnet_fast, min_trips = 3, attribute_trips = "bicycle_godutch", buffer = 10)
+
+tm_shape(ordered_routes_quiet) + tm_lines()
+tm_shape(ordered_routes_fast) + tm_lines()
 
 # Remove routes with start points too close to other higher ranked routes
 
-routes = ordered_routes
+routes = ordered_routes_quiet
 selected_routes = nrow(routes)
 filter_routes = function(
     routes,
@@ -343,8 +345,12 @@ filter_routes = function(
   routes_subset
 }
 
-top_routes = filter_routes(routes, buffer = 300, top_n = 3)
+top_routes_quiet = filter_routes(routes = ordered_routes_quiet, buffer = 300, top_n = 3)
+top_routes_fast = filter_routes(routes = ordered_routes_fast, buffer = 300, top_n = 3)
 
-tm_shape(top_routes) + tm_lines() +
+tm_shape(top_routes_quiet) + tm_lines() +
+  tm_shape(centroids_5km) + tm_bubbles("n_students")
+tm_shape(top_routes_fast) + tm_lines() +
   tm_shape(centroids_5km) + tm_bubbles("n_students")
 
+# Could also add feature to function so routes are penalised if students live far away from the route origin?
