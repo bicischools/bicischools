@@ -243,9 +243,9 @@ tm_shape(rnet_fast) +
   tm_shape(school) + tm_bubbles(fill = "green")
 
 m2 = tm_shape(rnet_quiet) +
-  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+  tm_lines("bicycle_godutch", palette = "-viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 m6 = tm_shape(rnet_fast) +
-  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+  tm_lines("bicycle_godutch", palette = "-viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 
 # Explore results ---------------------------------------------------------
 
