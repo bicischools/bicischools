@@ -162,7 +162,19 @@ for(plan in plans) {
   assign(x = paste0("routes_", plan), value = routes_plan)
 }
 
-# tm_shape(routes_quiet) + tm_lines()
+quiet_few = routes_quiet |> 
+  filter(route_number %in% c(20,3,5,7,11))
+fast_few = routes_fast |> 
+  filter(route_number %in% c(20,3,5,7,11))
+  
+m1 = tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(quiet_few) + tm_lines(lwd = 2)
+m5 = tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(fast_few) + tm_lines(lwd = 2)
+
+
 # tm_shape(routes_fast) + tm_lines()
 
 # For median route lengths
@@ -229,6 +241,11 @@ tm_shape(rnet_fast) +
   tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
   tm_shape(centroids_5km) + tm_bubbles("n_students") +
   tm_shape(school) + tm_bubbles(fill = "green")
+
+m2 = tm_shape(rnet_quiet) +
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+m6 = tm_shape(rnet_fast) +
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 
 # Explore results ---------------------------------------------------------
 
@@ -378,12 +395,12 @@ tm_shape(top_routes_fast) + tm_lines() +
   tm_shape(centroids_fast_5km) + tm_bubbles("n_students")
 
 # Bubbles by Go Dutch uptake
-m4 = tm_shape(top_routes_quiet) + tm_lines() +
-  tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch") + 
-  tm_shape(school) + tm_bubbles(fill = "green")
-m8 = tm_shape(top_routes_fast) + tm_lines() +
-  tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch") + 
-  tm_shape(school) + tm_bubbles(fill = "green")
+m4 = tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(top_routes_quiet) + tm_lines(lwd = 2)
+m8 = tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(top_routes_fast) + tm_lines(lwd = 2)
 
 # Could also add feature to function so routes are penalised if students live far away from the route origin?
 
