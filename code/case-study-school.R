@@ -240,6 +240,14 @@ m2 = tm_shape(rnet_quiet |> rename(`Potential cyclists` = bicycle_godutch)) +
 m6 = tm_shape(rnet_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 
+quietness_breaks = c(0, 25, 50, 75, 100)
+pal = c('#882255','#CC6677', '#44AA99', '#117733')
+
+m9 = tm_shape(rnet_quiet |> rename(`Cycle friendliness` = quietness)) +
+  tm_lines("Cycle friendliness", palette = pal, lwd = 3, breaks = quietness_breaks)
+m10 = tm_shape(rnet_fast |> rename(`Cycle friendliness` = quietness)) +
+  tm_lines("Cycle friendliness", palette = pal, lwd = 3, breaks = quietness_breaks)
+
 # Explore results ---------------------------------------------------------
 
 summary(routes_quiet$length)
@@ -407,3 +415,5 @@ m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutc
 
 # For panel figure in paper
 tmap_arrange(m1, m2, m3, m4, m5, m6, m7, m8, nrow = 2)
+
+tmap_arrange(m9, m10)
