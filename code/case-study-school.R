@@ -121,6 +121,7 @@ centroids_5km = zone_centroids |>
 tm_shape(centroids_5km) + tm_dots()
 
 saveRDS(centroids_5km, "data/centroids_5km.Rds")
+centroids_5km = readRDS("data/centroids_5km.Rds")
 
 od_5km = centroids_5km |>
   mutate(d = school$geometry)
@@ -167,14 +168,6 @@ quiet_few = routes_quiet |>
 fast_few = routes_fast |> 
   filter(route_number %in% c(20,3,5,7,11))
   
-m1 = tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(fill = "green") +
-  tm_shape(quiet_few) + tm_lines(lwd = 2)
-m5 = tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(fill = "green") +
-  tm_shape(fast_few) + tm_lines(lwd = 2)
-
-
 # tm_shape(routes_fast) + tm_lines()
 
 # For median route lengths
@@ -243,9 +236,9 @@ tm_shape(rnet_fast) +
   tm_shape(school) + tm_bubbles(fill = "green")
 
 m2 = tm_shape(rnet_quiet) +
-  tm_lines("bicycle_godutch", palette = "-viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 m6 = tm_shape(rnet_fast) +
-  tm_lines("bicycle_godutch", palette = "-viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 
 # Explore results ---------------------------------------------------------
 
@@ -271,6 +264,23 @@ for(plan in plans) {
     ungroup()
   assign(paste0("route_summaries_", plan), route_summaries)
 }
+
+quiet_join = route_summaries_quiet |> 
+  sf::st_drop_geometry() |> 
+  select(OBJECTID, route_number, bicycle_godutch)
+centroids_quiet_5km = inner_join(centroids_5km, quiet_join, by = "OBJECTID")
+
+fast_join = route_summaries_fast |> 
+  sf::st_drop_geometry() |> 
+  select(OBJECTID, route_number, bicycle_godutch)
+centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
+
+m1 = tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(quiet_few) + tm_lines(lwd = 2)
+m5 = tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(fast_few) + tm_lines(lwd = 2)
 
 # n students within 5km route distance of school
 sum(route_summaries_quiet$n_students)
@@ -299,6 +309,7 @@ rnet_quiet = rnet_quiet |>
 rnet = rnet_quiet
 routes = route_summaries_quiet
 attribute_trips = "bicycle_godutch"
+min_trips = 3
 cycle_bus_routes = function(
     routes,
     rnet,
@@ -340,9 +351,9 @@ tm_shape(ordered_routes_quiet) + tm_lines()
 tm_shape(ordered_routes_fast) + tm_lines()
 
 rnet_quiet_subset = rnet_quiet[rnet_quiet[[attribute_trips]] > min_trips,]
-m3 = tm_shape(rnet_quiet_subset) + tm_lines("bicycle_godutch", palette = "-viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+m3 = tm_shape(rnet_quiet_subset) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 rnet_fast_subset = rnet_fast[rnet_fast[[attribute_trips]] > min_trips,]
-m7 = tm_shape(rnet_fast_subset) + tm_lines("bicycle_godutch", palette = "-viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+m7 = tm_shape(rnet_fast_subset) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 
 # Remove routes with start points too close to other higher ranked routes
 
@@ -377,16 +388,6 @@ filter_routes = function(
 
 top_routes_quiet = filter_routes(routes = ordered_routes_quiet, buffer = 300, top_n = 3)
 top_routes_fast = filter_routes(routes = ordered_routes_fast, buffer = 300, top_n = 3)
-
-quiet_join = route_summaries_quiet |> 
-  sf::st_drop_geometry() |> 
-  select(OBJECTID, route_number, bicycle_godutch)
-centroids_quiet_5km = inner_join(centroids_5km, quiet_join, by = "OBJECTID")
-
-fast_join = route_summaries_fast |> 
-  sf::st_drop_geometry() |> 
-  select(OBJECTID, route_number, bicycle_godutch)
-centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
 
 # Bubbles by number of students
 tm_shape(top_routes_quiet) + tm_lines() +
