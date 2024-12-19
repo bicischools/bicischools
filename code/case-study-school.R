@@ -235,10 +235,10 @@ tm_shape(rnet_fast) +
   tm_shape(centroids_5km) + tm_bubbles("n_students") +
   tm_shape(school) + tm_bubbles(fill = "green")
 
-m2 = tm_shape(rnet_quiet) +
-  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
-m6 = tm_shape(rnet_fast) +
-  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+m2 = tm_shape(rnet_quiet |> rename(`Potential cyclists` = bicycle_godutch)) +
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+m6 = tm_shape(rnet_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 
 # Explore results ---------------------------------------------------------
 
@@ -275,10 +275,10 @@ fast_join = route_summaries_fast |>
   select(OBJECTID, route_number, bicycle_godutch)
 centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
 
-m1 = tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+m1 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
   tm_shape(school) + tm_bubbles(fill = "green") +
   tm_shape(quiet_few) + tm_lines(lwd = 2)
-m5 = tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+m5 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
   tm_shape(school) + tm_bubbles(fill = "green") +
   tm_shape(fast_few) + tm_lines(lwd = 2)
 
@@ -351,9 +351,9 @@ tm_shape(ordered_routes_quiet) + tm_lines()
 tm_shape(ordered_routes_fast) + tm_lines()
 
 rnet_quiet_subset = rnet_quiet[rnet_quiet[[attribute_trips]] > min_trips,]
-m3 = tm_shape(rnet_quiet_subset) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+m3 = tm_shape(rnet_quiet_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 rnet_fast_subset = rnet_fast[rnet_fast[[attribute_trips]] > min_trips,]
-m7 = tm_shape(rnet_fast_subset) + tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+m7 = tm_shape(rnet_fast_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 
 # Remove routes with start points too close to other higher ranked routes
 
@@ -396,10 +396,10 @@ tm_shape(top_routes_fast) + tm_lines() +
   tm_shape(centroids_fast_5km) + tm_bubbles("n_students")
 
 # Bubbles by Go Dutch uptake
-m4 = tm_shape(centroids_quiet_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+m4 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
   tm_shape(school) + tm_bubbles(fill = "green") +
   tm_shape(top_routes_quiet) + tm_lines(lwd = 2)
-m8 = tm_shape(centroids_fast_5km) + tm_bubbles("bicycle_godutch", alpha = 0.3) + 
+m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
   tm_shape(school) + tm_bubbles(fill = "green") +
   tm_shape(top_routes_fast) + tm_lines(lwd = 2)
 
