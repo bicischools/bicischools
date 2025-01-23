@@ -182,19 +182,19 @@ for(plan in plans) {
   assign(paste0("route_summaries_all_", plan), route_summaries)
 }
 
-# median route length
+# median route length for all students living within 5km euclidean distance of the school
 library(matrixStats)
 weightedMedian(route_summaries_all_quiet$length, route_summaries_all_quiet$n_students)
 # [1] 1068.333
 weightedMedian(route_summaries_all_fast$length, route_summaries_all_fast$n_students)
 # [1] 1064
 
-# median desire line length
+# median desire line length for all students living within 5km euclidean distance of the school
 library(matrixStats)
-weightedMedian(route_summaries_all_quiet$desire_line_length, route_summaries_all_quiet$n_students)
+weightedMedian(od_5km$desire_line_length, od_5km$n_students)
 # [1] 552.1148
 
-# students within 5km 
+# n_students within 5km euclidean distance
 under_5 = route_summaries_all_quiet |> 
   filter(desire_line_length < 5000)
 sum(under_5$n_students)
@@ -333,7 +333,7 @@ cycle_bus_routes = function(
   rnet_buffer = geo_buffer(rnet_union, dist = buffer)
   routes_subset = sf::st_intersection(routes, rnet_buffer)
   # now identify which centroid OBJECTIDs are associated with which selected routes
-  routes_subset = routes_subset |> 
+  routes_subset = routes_subset |> #################################################################
     distinct(geometry)
   routes_subset$length = sf::st_length(routes_subset) |> 
     as.numeric()
@@ -415,5 +415,6 @@ m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutc
 
 # For panel figure in paper
 tmap_arrange(m1, m2, m3, m4, m5, m6, m7, m8, nrow = 2)
+# tmap_arrange(m1, m5, m2, m6, m3, m7, m4, m8, nrow = 4)
 
 tmap_arrange(m9, m10)
