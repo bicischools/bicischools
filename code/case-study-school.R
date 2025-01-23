@@ -362,6 +362,7 @@ tm_shape(ordered_routes_fast) + tm_lines()
 # now identify which centroid OBJECTIDs are associated with which selected routes
 for(plan in plans) {
   rnet_plan = get(paste0("rnet_", plan))
+  routes = get(paste0("route_summaries_", plan))
   
   rnet_subset = rnet_plan[rnet_plan[[attribute_trips]] > min_trips,]
   rnet_subset$length = sf::st_length(rnet_subset) |>
@@ -380,12 +381,10 @@ for(plan in plans) {
   assign(paste0("route_stats_", plan), route_stats)
 }
 
-
+rnet_quiet_subset = rnet_quiet[rnet_quiet[[attribute_trips]] > min_trips,]
 m3 = tm_shape(rnet_quiet_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 
 rnet_fast_subset = rnet_fast[rnet_fast[[attribute_trips]] > min_trips,]
-
-
 m7 = tm_shape(rnet_fast_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 
 # Remove routes with start points too close to other higher ranked routes
