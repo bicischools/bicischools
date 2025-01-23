@@ -4,6 +4,8 @@
 # bicischools
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/bicischools/bicischools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/bicischools/bicischools/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of bicischools is to provide functions supporting development
@@ -37,6 +39,7 @@ lapply(pkg_deps$Package, usethis::use_package)
 # See if checks are happy now:
 devtools::check()
 usethis::use_mit_license()
+usethis::use_github_action("check-standard")
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`?
