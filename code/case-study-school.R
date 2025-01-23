@@ -331,10 +331,11 @@ cycle_bus_routes = function(
     as.numeric()
   rnet_union = sf::st_union(rnet_subset)
   rnet_buffer = geo_buffer(rnet_union, dist = buffer)
-  routes_subset = sf::st_intersection(routes, rnet_buffer)
-  # now identify which centroid OBJECTIDs are associated with which selected routes
-  routes_subset = routes_subset |> #################################################################
+  routes_crop = sf::st_intersection(routes, rnet_buffer)
+
+  routes_subset = routes_crop |> 
     distinct(geometry)
+  routes_subset$id = seq.int(nrow(routes_subset))
   routes_subset$length = sf::st_length(routes_subset) |> 
     as.numeric()
   attribute_trips_x_distance = paste0(attribute_trips, "_x_distance")
@@ -358,7 +359,23 @@ ordered_routes_fast = cycle_bus_routes(route_summaries_fast, rnet_fast, min_trip
 tm_shape(ordered_routes_quiet) + tm_lines()
 tm_shape(ordered_routes_fast) + tm_lines()
 
+# now identify which centroid OBJECTIDs are associated with which selected routes
 rnet_quiet_subset = rnet_quiet[rnet_quiet[[attribute_trips]] > min_trips,]
+rnet_quiet_subset$length = sf::st_length(rnet_quiet_subset) |>
+  as.numeric()
+rnet_quiet_union = sf::st_union(rnet_quiet_subset)
+rnet_quiet_buffer = geo_buffer(rnet_quiet_union, dist = buffer)
+routes_crop = sf::st_intersection(routes, rnet_quiet_buffer)
+
+join = sf::st_join(routes_crop, ordered_routes_quiet, join = st_equals)
+route_stats_quiet = join |> 
+  mutate(full_length = length.x,
+         bike_bus_length = length.y,
+         dist_to_bike_bus = length.x - length.y) |> 
+  select(-length.x, -length.y)
+
+
+
 m3 = tm_shape(rnet_quiet_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 rnet_fast_subset = rnet_fast[rnet_fast[[attribute_trips]] > min_trips,]
 m7 = tm_shape(rnet_fast_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
