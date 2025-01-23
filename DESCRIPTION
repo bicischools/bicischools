@@ -16,4 +16,6 @@ Imports:
     sf,
     stplanr,
     dplyr
+Remotes:
+   itsleeds/pct
 URL: https://bicischools.github.io/bicischools/

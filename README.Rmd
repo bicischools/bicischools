@@ -57,6 +57,7 @@ devtools::check()
 usethis::use_mit_license()
 usethis::use_github_action("check-standard")
 pkgdown::build_site_github_pages()
+usethis::use_pkgdown_github_pages()
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
