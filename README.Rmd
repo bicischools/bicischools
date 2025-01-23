@@ -1,0 +1,70 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# bicischools
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of bicischools is to provide functions supporting development of 'bike bus' routes.
+
+Work in progress...
+
+```{r}
+#| eval: false
+#| echo: false
+```
+
+
+## Installation
+
+You can install the development version of bicischools from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("bicischools/bicischools")
+```
+
+<!-- ## Setup -->
+
+<!-- The info below shows how we set-up the package. -->
+```{r setup}
+#| eval: false
+# Create readme:
+usethis::use_readme_rmd()
+# get deps
+getwd()
+pkg_deps = renv::dependencies("code/case-study-school.R")
+names(pkg_deps)
+pkg_deps = as.data.frame(pkg_deps)
+pkg_deps$Package
+lapply(pkg_deps$Package, usethis::use_package)
+# See if checks are happy now:
+devtools::check()
+usethis::use_mit_license()
+```
+
+What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+
+```{r cars}
+summary(cars)
+```
+
+You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+
+You can also embed plots, for example:
+
+
+In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
