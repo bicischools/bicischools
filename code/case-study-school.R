@@ -360,6 +360,7 @@ tm_shape(ordered_routes_quiet) + tm_lines()
 tm_shape(ordered_routes_fast) + tm_lines()
 
 # now identify which centroid OBJECTIDs are associated with which selected routes
+buffer = 10
 for(plan in plans) {
   rnet_plan = get(paste0("rnet_", plan))
   routes = get(paste0("route_summaries_", plan))
@@ -381,11 +382,14 @@ for(plan in plans) {
   assign(paste0("route_stats_", plan), route_stats)
 }
 
+
 rnet_quiet_subset = rnet_quiet[rnet_quiet[[attribute_trips]] > min_trips,]
-m3 = tm_shape(rnet_quiet_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+m3 = tm_shape(rnet_quiet_subset |> rename(`Potential cyclists` = bicycle_godutch)) +
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 
 rnet_fast_subset = rnet_fast[rnet_fast[[attribute_trips]] > min_trips,]
-m7 = tm_shape(rnet_fast_subset |> rename(`Potential cyclists` = bicycle_godutch)) + tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+m7 = tm_shape(rnet_fast_subset |> rename(`Potential cyclists` = bicycle_godutch)) +
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
 
 # Remove routes with start points too close to other higher ranked routes
 
@@ -442,3 +446,33 @@ tmap_arrange(m1, m2, m3, m4, m5, m6, m7, m8, nrow = 2)
 # tmap_arrange(m1, m5, m2, m6, m3, m7, m4, m8, nrow = 4)
 
 tmap_arrange(m9, m10)
+
+# Route lengths for paper
+# route_stats_fast
+
+# Top routes centroids
+# Need to add in all centroids for routes with origins within 10m of these routes
+# find which route the discarded routes were closest to
+
+  
+routes = ordered_routes_quiet # then remove the top routes from this object
+z = nrow(routes)
+for(i in 1:z) {
+  route_i = routes[i, ]
+  p = st_cast(route_i$geometry, "POINT")
+  p1 = p[1]
+  top_route_one = top_routes_quiet[1,]
+  top_route_two = top_routes_quiet[2,]
+  top_route_three = top_routes_quiet[3,]
+  distance_one = units::drop_units(sf::st_distance(p1, top_route_one))
+  distance_two = units::drop_units(sf::st_distance(p1, top_route_two))
+  distance_three = units::drop_units(sf::st_distance(p1, top_route_three))
+  a = c(distance_one, distance_two, distance_three)
+  closest = which.min(a) # if two distances are tied, this picks the higher ranked route
+  dist = a[closest]
+}
+    
+
+top_cents = inner_join(route_stats_quiet, top_routes_quiet |> sf::st_drop_geometry(), by = "id")
+cents = inner_join(centroids_5km, top_cents |> sf::st_drop_geometry(), by = "OBJECTID")
+tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3)

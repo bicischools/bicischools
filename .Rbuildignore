@@ -5,3 +5,5 @@
 ^docs$
 ^pkgdown$
 ^data$
+^.*\.Rproj$
+^\.Rproj\.user$
