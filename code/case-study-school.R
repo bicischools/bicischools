@@ -432,27 +432,23 @@ tm_shape(top_routes_fast) + tm_lines() +
   tm_shape(centroids_fast_5km) + tm_bubbles("n_students")
 
 # Bubbles by Go Dutch uptake
-m4 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(top_routes_quiet) + tm_lines(lwd = 2)
-m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(top_routes_fast) + tm_lines(lwd = 2)
+# m4 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
+#   tm_shape(school) + tm_bubbles(col = "green") +
+#   tm_shape(top_routes_quiet) + tm_lines(lwd = 2)
+# m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
+#   tm_shape(school) + tm_bubbles(col = "green") +
+#   tm_shape(top_routes_fast) + tm_lines(lwd = 2)
 
 # Could also add feature to function so routes are penalised if students live far away from the route origin?
 
-# For panel figure in paper
-tmap_arrange(m1, m2, m3, m4, m5, m6, m7, m8, nrow = 2)
-# tmap_arrange(m1, m5, m2, m6, m3, m7, m4, m8, nrow = 4)
-
 tmap_arrange(m9, m10)
 
-# Route lengths for paper
-# route_stats_fast
+
+# Matching centroids to routes --------------------------------------------
 
 # Top routes centroids
-# Need to add in all centroids for routes with origins within ~10m of these routes
-# find which route the discarded routes were closest to
+# Adds in all (centroids for) routes with origins within ~10m of the top routes
+# finds which top route the discarded routes were closest to
 routes_cents = ordered_routes_quiet |> filter(!id %in% top_routes_quiet$id) # removed the top routes from this object
 routes_cents$pick = NA
 z = nrow(routes_cents)
@@ -499,15 +495,20 @@ top_cents = top_cents |>
 cents = inner_join(centroids_5km, top_cents |> sf::st_drop_geometry(), by = "OBJECTID")
 
 to_map = top_routes_quiet |> 
-  mutate(`Route ranking` = as.character(row_number())) |> 
-  arrange(desc(`Route ranking`))
+  mutate(`Candidate route` = as.character(row_number())) |> 
+  arrange(desc(`Candidate route`))
 
-tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + 
+m4 = tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + 
   tm_bubbles("Potential cyclists", col = "pick") +
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(to_map) + 
-  tm_lines(lwd = 3, col = "Route ranking")
+  tm_lines(lwd = 3, col = "Candidate route")
 
+# For panel figure in paper
+tmap_arrange(m2, m3, m4, m6, m7, m8, nrow = 2)
+
+# For new panel figure showing centroids
+tmap_arrange(mx, m1, m5, nrow = 2)
 
 # Stats for paper ---------------------------------------------------------
 
