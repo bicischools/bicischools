@@ -511,14 +511,25 @@ tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) +
 
 # Stats for paper ---------------------------------------------------------
 
-# % of students (living within 1-5km of the school) accommodated for by the top 3 bike bus routes
+# % of students (living within 5km of the school) accommodated for by the top 3 bike bus routes
 sum(cents$n_students.x)
 # [1] 34
-sum(cents$n_students.x) / ...
+sum(cents$n_students.x) / sum(under_5$n_students)
+# [1] 0.2222222
 
 # % of Go Dutch cycling potential accommodated within the top 3 bike bus routes
-sum(cents$bicycle_godutch) / sum(...$bicycle_godutch)
+sum(cents$bicycle_godutch) / sum(route_summaries_quiet$bicycle_godutch)
+# [1] 0.4549882
 
 # Bike bus route lengths
+ll = cents |> filter(id %in% top_routes_quiet$id)
+min(ll$bike_bus_length)
+# [1] 2053.585
+max(ll$bike_bus_length)
+# [1] 2387.35
+weightedMedian(cents$bike_bus_length, w = cents$bicycle_godutch)
+# [1] 2130.639
 
 # Distances from centroids to the bike bus routes
+weightedMedian(cents$dist_to_bike_bus, w = cents$bicycle_godutch)
+# [1] 562.6769
