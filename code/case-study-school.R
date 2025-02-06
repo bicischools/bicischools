@@ -229,11 +229,11 @@ for(plan in plans) {
 tm_shape(rnet_quiet) +
   tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
   tm_shape(centroids_5km) + tm_bubbles("n_students") +
-  tm_shape(school) + tm_bubbles(fill = "green")
+  tm_shape(school) + tm_bubbles(col = "green")
 tm_shape(rnet_fast) +
   tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
   tm_shape(centroids_5km) + tm_bubbles("n_students") +
-  tm_shape(school) + tm_bubbles(fill = "green")
+  tm_shape(school) + tm_bubbles(col = "green")
 
 m2 = tm_shape(rnet_quiet |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
@@ -284,10 +284,10 @@ fast_join = route_summaries_fast |>
 centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
 
 m1 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(quiet_few) + tm_lines(lwd = 2)
 m5 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(fast_few) + tm_lines(lwd = 2)
 
 # n students within 5km route distance of school
@@ -433,10 +433,10 @@ tm_shape(top_routes_fast) + tm_lines() +
 
 # Bubbles by Go Dutch uptake
 m4 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(top_routes_quiet) + tm_lines(lwd = 2)
 m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(fill = "green") +
+  tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(top_routes_fast) + tm_lines(lwd = 2)
 
 # Could also add feature to function so routes are penalised if students live far away from the route origin?
@@ -473,22 +473,33 @@ for(i in 1:z) {
   routes_cents$pick[i] = pick
 }
 
-routes_cents = routes_cents |> 
-  mutate(join_id = case_when(
-    pick == 1 ~ top_routes_quiet$id[1],
-    pick == 2 ~ top_routes_quiet$id[2],
-    pick == 3 ~ top_routes_quiet$id[3],
-    pick == 0 ~ 0
-  ))
+# routes_cents = routes_cents |> 
+#   mutate(join_id = case_when(
+#     pick == 1 ~ top_routes_quiet$id[1],
+#     pick == 2 ~ top_routes_quiet$id[2],
+#     pick == 3 ~ top_routes_quiet$id[3],
+#     pick == 0 ~ 0
+#   ))
 
 routes_both = routes_cents |> 
-  filter(join_id != 0) |> 
-  select(-pick)
-routes_both = rbind(routes_both, top_routes_quiet |> mutate(join_id = id))
+  filter(pick != 0)
+routes_both = rbind(routes_both, top_routes_quiet |> mutate(pick = row_number()))
 routes_both = routes_both |> 
-  mutate(join_id = as.character(join_id))
-
+  mutate(pick = as.character(pick))
 
 top_cents = inner_join(route_stats_quiet, routes_both |> sf::st_drop_geometry(), by = "id")
+
+# remove routes <500m or where less than half of the distance is on the bike bus
+top_cents = top_cents |> 
+  filter(
+    full_length > 500,
+    bike_bus_length > dist_to_bike_bus
+    )
+
 cents = inner_join(centroids_5km, top_cents |> sf::st_drop_geometry(), by = "OBJECTID")
-tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3, col = "join_id")
+
+tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + 
+  tm_bubbles("Potential cyclists", col = "pick") +
+  tm_shape(school) + tm_bubbles(col = "green") +
+  tm_shape(top_routes_quiet |> mutate(`Route ranking` = as.character(row_number()))) + 
+  tm_lines(lwd = 3, col = "Route ranking")
