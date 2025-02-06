@@ -507,3 +507,18 @@ tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(to_map) + 
   tm_lines(lwd = 3, col = "Route ranking")
+
+
+# Stats for paper ---------------------------------------------------------
+
+# % of students (living within 1-5km of the school) accommodated for by the top 3 bike bus routes
+sum(cents$n_students.x)
+# [1] 34
+sum(cents$n_students.x) / ...
+
+# % of Go Dutch cycling potential accommodated within the top 3 bike bus routes
+sum(cents$bicycle_godutch) / sum(...$bicycle_godutch)
+
+# Bike bus route lengths
+
+# Distances from centroids to the bike bus routes
