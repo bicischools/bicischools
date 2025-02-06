@@ -451,14 +451,13 @@ tmap_arrange(m9, m10)
 # route_stats_fast
 
 # Top routes centroids
-# Need to add in all centroids for routes with origins within 10m of these routes
+# Need to add in all centroids for routes with origins within ~10m of these routes
 # find which route the discarded routes were closest to
-
-  
-routes = ordered_routes_quiet # then remove the top routes from this object
-z = nrow(routes)
+routes_cents = ordered_routes_quiet |> filter(!id %in% top_routes_quiet$id) # removed the top routes from this object
+routes_cents$pick = NA
+z = nrow(routes_cents)
 for(i in 1:z) {
-  route_i = routes[i, ]
+  route_i = routes_cents[i, ]
   p = st_cast(route_i$geometry, "POINT")
   p1 = p[1]
   top_route_one = top_routes_quiet[1,]
@@ -470,9 +469,26 @@ for(i in 1:z) {
   a = c(distance_one, distance_two, distance_three)
   closest = which.min(a) # if two distances are tied, this picks the higher ranked route
   dist = a[closest]
+  pick = if(dist <= (buffer + 5)) closest else 0 # have to allow distances a bit greater than buffer (10m) to account for rounding errors
+  routes_cents$pick[i] = pick
 }
-    
 
-top_cents = inner_join(route_stats_quiet, top_routes_quiet |> sf::st_drop_geometry(), by = "id")
+routes_cents = routes_cents |> 
+  mutate(join_id = case_when(
+    pick == 1 ~ top_routes_quiet$id[1],
+    pick == 2 ~ top_routes_quiet$id[2],
+    pick == 3 ~ top_routes_quiet$id[3],
+    pick == 0 ~ 0
+  ))
+
+routes_both = routes_cents |> 
+  filter(join_id != 0) |> 
+  select(-pick)
+routes_both = rbind(routes_both, top_routes_quiet |> mutate(join_id = id))
+routes_both = routes_both |> 
+  mutate(join_id = as.character(join_id))
+
+
+top_cents = inner_join(route_stats_quiet, routes_both |> sf::st_drop_geometry(), by = "id")
 cents = inner_join(centroids_5km, top_cents |> sf::st_drop_geometry(), by = "OBJECTID")
-tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3)
+tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3, col = "join_id")
