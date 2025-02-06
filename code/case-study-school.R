@@ -498,8 +498,12 @@ top_cents = top_cents |>
 
 cents = inner_join(centroids_5km, top_cents |> sf::st_drop_geometry(), by = "OBJECTID")
 
+to_map = top_routes_quiet |> 
+  mutate(`Route ranking` = as.character(row_number())) |> 
+  arrange(desc(`Route ranking`))
+
 tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + 
   tm_bubbles("Potential cyclists", col = "pick") +
   tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(top_routes_quiet |> mutate(`Route ranking` = as.character(row_number()))) + 
+  tm_shape(to_map) + 
   tm_lines(lwd = 3, col = "Route ranking")
