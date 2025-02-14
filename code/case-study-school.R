@@ -449,59 +449,73 @@ tmap_arrange(m9, m10)
 # Top routes centroids
 # Adds in all (centroids for) routes with origins within ~10m of the top routes
 # finds which top route the discarded routes were closest to
-routes_cents = ordered_routes_quiet |> filter(!id %in% top_routes_quiet$id) # removed the top routes from this object
-routes_cents$pick = NA
-z = nrow(routes_cents)
-for(i in 1:z) {
-  route_i = routes_cents[i, ]
-  p = st_cast(route_i$geometry, "POINT")
-  p1 = p[1]
-  top_route_one = top_routes_quiet[1,]
-  top_route_two = top_routes_quiet[2,]
-  top_route_three = top_routes_quiet[3,]
-  distance_one = units::drop_units(sf::st_distance(p1, top_route_one))
-  distance_two = units::drop_units(sf::st_distance(p1, top_route_two))
-  distance_three = units::drop_units(sf::st_distance(p1, top_route_three))
-  a = c(distance_one, distance_two, distance_three)
-  closest = which.min(a) # if two distances are tied, this picks the higher ranked route
-  dist = a[closest]
-  pick = if(dist <= (buffer + 5)) closest else 0 # have to allow distances a bit greater than buffer (10m) to account for rounding errors
-  routes_cents$pick[i] = pick
+routes_cents = ordered_routes_quiet
+top_routes = top_routes_quiet
+
+match_centroids = function(
+    routes_cents,
+    top_routes,
+    route_stats,
+    centroids_5km
+) {
+  routes_cents = routes_cents |> filter(!id %in% top_routes$id) # removed the top routes from this object
+  routes_cents$pick = NA
+  z = nrow(routes_cents)
+  for(i in 1:z) {
+    route_i = routes_cents[i, ]
+    p = st_cast(route_i$geometry, "POINT")
+    p1 = p[1]
+    top_route_one = top_routes[1,]
+    top_route_two = top_routes[2,]
+    top_route_three = top_routes[3,]
+    distance_one = units::drop_units(sf::st_distance(p1, top_route_one))
+    distance_two = units::drop_units(sf::st_distance(p1, top_route_two))
+    distance_three = units::drop_units(sf::st_distance(p1, top_route_three))
+    a = c(distance_one, distance_two, distance_three)
+    closest = which.min(a) # if two distances are tied, this picks the higher ranked route
+    dist = a[closest]
+    pick = if(dist <= (buffer + 5)) closest else 0 # have to allow distances a bit greater than buffer (10m) to account for rounding errors
+    routes_cents$pick[i] = pick
+  }
+  
+  routes_both = routes_cents |> 
+    filter(pick != 0)
+  routes_both = rbind(routes_both, top_routes |> mutate(pick = row_number()))
+  routes_both = routes_both |> 
+    mutate(pick = as.character(pick))
+  
+  top_cents = inner_join(route_stats, routes_both |> sf::st_drop_geometry(), by = "id")
+  
+  # remove routes <500m or where less than half of the distance is on the bike bus
+  top_cents = top_cents |> 
+    filter(
+      full_length > 500,
+      bike_bus_length > dist_to_bike_bus
+    )
+  
+  cents = inner_join(centroids_5km, top_cents |> sf::st_drop_geometry(), by = "OBJECTID")
+  cents
 }
 
-# routes_cents = routes_cents |> 
-#   mutate(join_id = case_when(
-#     pick == 1 ~ top_routes_quiet$id[1],
-#     pick == 2 ~ top_routes_quiet$id[2],
-#     pick == 3 ~ top_routes_quiet$id[3],
-#     pick == 0 ~ 0
-#   ))
+cents_quiet = match_centroids(ordered_routes_quiet, top_routes_quiet, route_stats_quiet, centroids_5km)
+cents_fast = match_centroids(ordered_routes_fast, top_routes_fast, route_stats_fast, centroids_5km)
 
-routes_both = routes_cents |> 
-  filter(pick != 0)
-routes_both = rbind(routes_both, top_routes_quiet |> mutate(pick = row_number()))
-routes_both = routes_both |> 
-  mutate(pick = as.character(pick))
-
-top_cents = inner_join(route_stats_quiet, routes_both |> sf::st_drop_geometry(), by = "id")
-
-# remove routes <500m or where less than half of the distance is on the bike bus
-top_cents = top_cents |> 
-  filter(
-    full_length > 500,
-    bike_bus_length > dist_to_bike_bus
-    )
-
-cents = inner_join(centroids_5km, top_cents |> sf::st_drop_geometry(), by = "OBJECTID")
-
-to_map = top_routes_quiet |> 
+to_map_quiet = top_routes_quiet |> 
+  mutate(`Candidate route` = as.character(row_number())) |> 
+  arrange(desc(`Candidate route`))
+to_map_fast = top_routes_fast |> 
   mutate(`Candidate route` = as.character(row_number())) |> 
   arrange(desc(`Candidate route`))
 
-m4 = tm_shape(cents |> rename(`Potential cyclists` = bicycle_godutch)) + 
+m4 = tm_shape(cents_quiet |> rename(`Potential cyclists` = bicycle_godutch)) + 
   tm_bubbles("Potential cyclists", col = "pick") +
   tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(to_map) + 
+  tm_shape(to_map_quiet) + 
+  tm_lines(lwd = 3, col = "Candidate route")
+m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) + 
+  tm_bubbles("Potential cyclists", col = "pick") +
+  tm_shape(school) + tm_bubbles(col = "green") +
+  tm_shape(to_map_fast) + 
   tm_lines(lwd = 3, col = "Candidate route")
 
 # For panel figure in paper
