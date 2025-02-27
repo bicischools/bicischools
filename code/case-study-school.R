@@ -283,10 +283,13 @@ fast_join = route_summaries_fast |>
   select(OBJECTID, route_number, bicycle_godutch)
 centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
 
-m1 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
+
+m0 = tm_shape(zone_centroids |> rename(`Number of students` = n_students)) + tm_bubbles("Number of students", alpha = 0.3) +
+  tm_shape(school) + tm_bubbles(col = "green")
+m1 = tm_shape(centroids_quiet_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) + 
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(quiet_few) + tm_lines(lwd = 2)
-m5 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
+m5 = tm_shape(centroids_fast_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) + 
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(fast_few) + tm_lines(lwd = 2)
 
@@ -522,29 +525,60 @@ m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
 tmap_arrange(m2, m3, m4, m6, m7, m8, nrow = 2)
 
 # For new panel figure showing centroids
-tmap_arrange(mx, m1, m5, nrow = 2)
+tmap_arrange(m0, m1, m5, nrow = 1)
 
 # Stats for paper ---------------------------------------------------------
 
+# Quiet routes
 # % of students (living within 5km of the school) accommodated for by the top 3 bike bus routes
-sum(cents$n_students.x)
+sum(cents_quiet$n_students.x)
 # [1] 34
-sum(cents$n_students.x) / sum(under_5$n_students)
+sum(cents_quiet$n_students.x) / sum(under_5$n_students)
 # [1] 0.2222222
 
 # % of Go Dutch cycling potential accommodated within the top 3 bike bus routes
-sum(cents$bicycle_godutch) / sum(route_summaries_quiet$bicycle_godutch)
+sum(cents_quiet$bicycle_godutch) / sum(route_summaries_quiet$bicycle_godutch)
 # [1] 0.4549882
+sum(cents_quiet$bicycle_godutch)
 
 # Bike bus route lengths
-ll = cents |> filter(id %in% top_routes_quiet$id)
+ll = cents_quiet |> filter(id %in% top_routes_quiet$id)
 min(ll$bike_bus_length)
 # [1] 2053.585
 max(ll$bike_bus_length)
 # [1] 2387.35
-weightedMedian(cents$bike_bus_length, w = cents$bicycle_godutch)
+
+# Median distance travelled along bike bus
+weightedMedian(cents_quiet$bike_bus_length, w = cents_quiet$bicycle_godutch)
 # [1] 2130.639
 
 # Distances from centroids to the bike bus routes
-weightedMedian(cents$dist_to_bike_bus, w = cents$bicycle_godutch)
+weightedMedian(cents_quiet$dist_to_bike_bus, w = cents_quiet$bicycle_godutch)
 # [1] 562.6769
+
+# Fast routes
+# % of students (living within 5km of the school) accommodated for by the top 3 bike bus routes
+sum(cents_fast$n_students.x)
+# [1] 39
+sum(cents_fast$n_students.x) / sum(under_5$n_students)
+# [1] 0.254902
+
+# % of Go Dutch cycling potential accommodated within the top 3 bike bus routes
+sum(cents_fast$bicycle_godutch) / sum(route_summaries_fast$bicycle_godutch)
+# [1] 0.4103948
+sum(cents_fast$bicycle_godutch)
+
+# Bike bus route lengths
+ll = cents_fast |> filter(id %in% top_routes_fast$id)
+min(ll$bike_bus_length)
+# [1] 1786.382
+max(ll$bike_bus_length)
+# [1] 2544.631
+
+# Median distance travelled along bike bus
+weightedMedian(cents_fast$bike_bus_length, w = cents_fast$bicycle_godutch)
+# [1] 1786.381
+
+# Distances from centroids to the bike bus routes
+weightedMedian(cents_fast$dist_to_bike_bus, w = cents_fast$bicycle_godutch)
+# [1] 687.5779
