@@ -62,7 +62,7 @@ g2 = schools_c1 |>
 g1 + g2
 ```
 
-Before we run any models let's compare the total number of pupils in the zones dataset and the destinations dataset (they should be the same):
+Before we run any models let's compare the total number of pupils in the zones dataset and the destinations dataset:
 
 ```{r}
 #| label: compare-totals
@@ -98,7 +98,7 @@ sum(schools_c1$n_pupils)
 
 # Preprocessing
 
-Based on these inputs the `si_to_od()` function generates the OD data, as shown below (note: 2 versions are created, one with a maximum distance constraint for speed of processing, important when working with large datasets).
+Based on these inputs the `si_to_od()` function generates the OD data, as shown below (note: we apply a maximum distance constraint of 3km for speed of processing, important when working with large datasets).
 
 ```{r}
 #| echo: true
@@ -112,13 +112,7 @@ od_from_si = simodels::si_to_od(home_zones, schools_c1, max_dist = max_dist)
 m1 = od_from_si |>
   ggplot() +
   geom_sf(alpha = 0.1)
-m1
-```
-
-The output OD dataset has column names taken from both the origin and destination datasets, with the following column names:
-
-```{r}
-names(od_from_si)
+# m1 # This figure is too computationally intensive
 ```
 
 ```{r}
@@ -126,6 +120,7 @@ names(od_from_si)
 # using testing OD dataset based on the case study school, with destination code matching the one for Adriano Correia school in `schools_geo`
 case_study_school = readRDS("data/zone_counts.Rds")
 od_observed = case_study_school |> 
+  sf::st_drop_geometry() |> 
   mutate(D = 1106908) |> 
   select(OBJECTID, D, n_students)
 names(od_observed)[1:3] = c("O", "D", "frequency")
@@ -134,6 +129,12 @@ od_from_si = left_join(
   od_from_si,
   od_observed
 )
+```
+
+The output OD dataset has column names taken from both the origin and destination datasets, with the following column names:
+
+```{r}
+names(od_from_si)
 ```
 
 # A basic model
