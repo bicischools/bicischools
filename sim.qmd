@@ -36,16 +36,16 @@ bgri_4326 = sf::st_transform(bgri, 4326)
 bgri_4326 = sf::st_make_valid(bgri_4326)
 
 # # Restrict to Lisbon city only
-# bgri_4326 = bgri_4326 |> 
-#   filter(DTMN21 == 1106)
-# schools_c1 = readRDS("data/lisbon_c1.Rds")
+bgri_4326 = bgri_4326 |>
+  filter(DTMN21 == 1106)
+schools_c1 = readRDS("data/lisbon_c1.Rds")
 
 # Restrict to Almada only
-bgri_4326 = bgri_4326 |>
-  filter(DTMN21 == 1503)
-schools_c1 = readRDS("data/c1.Rds")
-schools_c1 = schools_c1 |> 
-  filter(MUNICIPIO == "Almada")
+# bgri_4326 = bgri_4326 |>
+#   filter(DTMN21 == 1503)
+# schools_c1 = readRDS("data/c1.Rds")
+# schools_c1 = schools_c1 |> 
+#   filter(MUNICIPIO == "Almada")
 
 # See schools.qmd
 # schools_c1 = readRDS("data/c1_public.Rds")
@@ -130,9 +130,9 @@ od_observed = case_study_school |>
   sf::st_drop_geometry() |> 
   mutate(D = 1106908) |> 
   select(OBJECTID, D, n_students)
-names(od_observed)[1:3] = c("O", "D", "freq_real")
+names(od_observed)[1:3] = c("O", "D", "frequency")
 # join od_observed to od_from_si:
-od_from_si_extra = left_join(
+od_from_si = left_join(
   od_from_si,
   od_observed
 )
@@ -224,7 +224,7 @@ g_combined = res_combined |>
 #  + g_d 
 #  + g_od
 g_combined
-# rsq = cor(od_res$frequency, od_res$interaction, use = "complete.obs")^2
+rsq = cor(od_res$frequency, od_res$interaction, use = "complete.obs")^2
 # rsq
 ```
 
