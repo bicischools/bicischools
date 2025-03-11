@@ -361,6 +361,9 @@ res_constrained = simodels::si_calculate(
   constraint_production = origin_pupils_estimated,
   beta = beta_new
   )
+# We need to remove the rows within 0 origin_pupils_estimated to avoid NaN errors 
+res_constrained = res_constrained |> 
+  filter(origin_pupils_estimated > 0)
 ```
 
 ```{r}
@@ -527,10 +530,10 @@ The results are saved as .csv and .geojson files ready for the next step:
 
 ```{r}
 #| echo: true
-sf::write_sf(res_output, "res_output_almada.geojson", delete_dsn = TRUE)
+sf::write_sf(res_output, "res_output_lisbon.geojson", delete_dsn = TRUE)
 res_output |>
   sf::st_drop_geometry() |>
-  write_csv("res_output_almada.csv")
+  write_csv("res_output_lisbon.csv")
 ```
 
 ```{r}
