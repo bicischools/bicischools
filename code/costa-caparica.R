@@ -1,6 +1,6 @@
 library(sf)
 library(tmap)
-tmap_mode
+tmap_mode("view")
 library(dplyr)
 
 res_output = read_sf("res_output_almada.geojson")
