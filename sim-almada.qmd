@@ -367,6 +367,11 @@ res_constrained = simodels::si_calculate(
   constraint_production = origin_pupils_estimated,
   beta = beta_new
   )
+# We need to remove the rows within 0 origin_pupils_estimated to avoid NaN errors 
+res_constrained = res_constrained |> 
+  filter(origin_pupils_estimated > 0)
+# res_constrained = res_constrained |> 
+#   mutate(interaction = tidyr::replace_na(interaction, 0))
 ```
 
 ```{r}

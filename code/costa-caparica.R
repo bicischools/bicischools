@@ -19,5 +19,3 @@ res_cc = res_output |>
     )
 
 tm_shape(res_cc) + tm_lines()
-
-# Why is res_output$trips_modelled always NA?
