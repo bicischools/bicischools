@@ -26,7 +26,7 @@ theme_set(theme_minimal())
 ```
 
 The package uses the [`{simodels}` R package](https://robinlovelace.github.io/simodels/) to pre-process the input datasets and generate the OD data used as the basis of the interaction prediction model.
-The input datasets are illustrated in the figure below (these are census data for BGRI zones in Lisbon city, and student numbers for Ciclo 1 schools in Lisbon):
+The input datasets are illustrated in the figure below (these are census data for BGRI zones in Almada (Lisbon Metropolitan Area), and student numbers for Ciclo 1 schools in Almada):
 
 ```{r}
 #| label: inputs
@@ -64,8 +64,8 @@ g1 = home_zones |>
   labs(title = "Zones")
 g2 = schools_c1 |>
     ggplot() +
-    geom_sf() +
-    labs(title = "Destinations")
+    geom_sf(size = schools_c1$STUDENTS/100) +
+    labs(title = "Destinations (Schools)")
 g1 + g2
 ```
 
