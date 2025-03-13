@@ -11,8 +11,8 @@ schools_c1 = readRDS("data/c1.Rds")
 schools_c1 = schools_c1 |>
   filter(MUNICIPIO == "Almada")
 
-schools_c1$case_study = grepl("Escola Básica n.º 2 da Costa da Caparica, Almada", schools_c1$ESCOLA)
-case_study = schools_c1[which(schools_c1$case_study),]
+schools_c1$ciclo_school = grepl("Escola Básica n.º 2 da Costa da Caparica, Almada", schools_c1$ESCOLA)
+ciclo_school = schools_c1[which(schools_c1$ciclo_school),]
 
 bgri = read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
 bgri_4326 = st_transform(bgri, 4326)
@@ -28,7 +28,7 @@ zone_centroids = st_centroid(zone_counts)
 # Zone centroids within 5km of school
 zone_centroids = zone_centroids |> 
   mutate(
-    desire_line_length = st_distance(geom, case_study)[,1],
+    desire_line_length = st_distance(geom, ciclo_school)[,1],
     desire_line_length = units::drop_units(desire_line_length)
   )
 centroids_5km = zone_centroids |> 
@@ -37,7 +37,7 @@ centroids_5km = zone_centroids |>
 # Get OD desire lines for Costa da Caparica school
 res_cc = res_output |> 
   filter(
-    D == case_study$DGEEC_id
+    D == ciclo_school$DGEEC_id
     # , !is.na(trips_modelled)
     )
 
@@ -184,26 +184,24 @@ fast_join = route_summaries_fast |>
 centroids_fast_5km = inner_join(centroids_5km, fast_join, by = c("OBJECTID" = "O"))
 
 
-m0 = tm_shape(zone_centroids |> rename(`Number of students` = trips_modelled)) + tm_bubbles("Number of students", alpha = 0.3) +
-  tm_shape(school) + tm_bubbles(col = "green")
-m1 = tm_shape(centroids_quiet_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) +
-  tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(quiet_few) + tm_lines(lwd = 2)
-m5 = tm_shape(centroids_fast_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) +
-  tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(fast_few) + tm_lines(lwd = 2)
+tm_shape(zone_centroids) + tm_bubbles("N_INDIVIDUOS_0_14", alpha = 0.3) +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green")
+tm_shape(centroids_quiet_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green")
+tm_shape(centroids_fast_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green")
 
 # n students within 5km route distance of school
 sum(route_summaries_quiet$trips_modelled)
-# [1] 140
+# [1] 213.9925
 sum(route_summaries_fast$trips_modelled)
-# [1] 148
+# [1] 215.2971
 
 # n_cyclists under go dutch
 sum(route_summaries_quiet$bicycle_godutch)
-# [1] 40.38902
+# [1] 75.2093
 sum(route_summaries_fast$bicycle_godutch)
-# [1] 40.47256
+# [1] 75.48766
 
 
 # Bundling function -------------------------------------------------------
@@ -324,21 +322,18 @@ top_routes_fast = filter_routes(routes = ordered_routes_fast, buffer = 300, top_
 
 # Bubbles by number of students
 tm_shape(top_routes_quiet) + tm_lines() +
-  tm_shape(centroids_quiet_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_quiet_5km) + tm_bubbles("N_INDIVIDUOS_0_14")
 tm_shape(top_routes_fast) + tm_lines() +
-  tm_shape(centroids_fast_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_fast_5km) + tm_bubbles("N_INDIVIDUOS_0_14")
 
 # Bubbles by Go Dutch uptake
 # m4 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-#   tm_shape(school) + tm_bubbles(col = "green") +
+#   tm_shape(ciclo_school) + tm_bubbles(col = "green") +
 #   tm_shape(top_routes_quiet) + tm_lines(lwd = 2)
 # m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-#   tm_shape(school) + tm_bubbles(col = "green") +
+#   tm_shape(ciclo_school) + tm_bubbles(col = "green") +
 #   tm_shape(top_routes_fast) + tm_lines(lwd = 2)
 
-# Could also add feature to function so routes are penalised if students live far away from the route origin?
-
-tmap_arrange(m9, m10)
 
 
 
