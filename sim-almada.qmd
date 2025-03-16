@@ -64,7 +64,7 @@ g1 = home_zones |>
   labs(title = "Zones")
 g2 = schools_c1 |>
     ggplot() +
-    geom_sf(size = schools_c1$STUDENTS/100) +
+    geom_sf() +
     labs(title = "Destinations (Schools)")
 g1 + g2
 ```
