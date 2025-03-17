@@ -30,3 +30,5 @@ st_write(comboios, "data/comboios.gpkg")
 comboios = st_read("data/comboios.gpkg")
 mapview(comboios, zcol = "name")
 tm_shape(comboios) + tm_lines(col = "name", lwd = 2)
+
+piggyback::pb_upload("data/comboios.gpkg")
