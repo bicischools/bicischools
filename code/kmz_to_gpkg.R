@@ -22,13 +22,14 @@ for(i in layers$name){
 
 comboios = comboios |> 
   distinct() |>
-  select(name, geometry) 
+  group_by(name) |>
+  summarise(geometry = st_union(geometry))
 # class(comboios)
 
-st_write(comboios, "data/comboios.gpkg")
+st_write(comboios, "data/comboios.gpkg", delete_dsn = TRUE)
 
 comboios = st_read("data/comboios.gpkg")
 mapview(comboios, zcol = "name")
-tm_shape(comboios) + tm_lines(col = "name", lwd = 2)
+# tm_shape(comboios) + tm_lines(col = "name", lwd = 2)
 
 piggyback::pb_upload("data/comboios.gpkg")
