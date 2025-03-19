@@ -400,7 +400,7 @@ to_map_fast = top_routes_fast |>
 
 m4 = tm_shape(cents_quiet |> rename(`Potential cyclists` = bicycle_godutch)) + 
   tm_bubbles("Potential cyclists", col = "pick") +
-  tm_shape(school) + tm_bubbles(col = "green") +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green") +
   tm_shape(to_map_quiet) + 
   tm_lines(lwd = 3, col = "Candidate route")
 m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) + 
@@ -408,6 +408,11 @@ m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(to_map_fast) + 
   tm_lines(lwd = 3, col = "Candidate route")
+
+saveRDS(cents_quiet, "data/costa-caparica-quiet-centroids.Rds")
+saveRDS(cents_fast, "data/costa-caparica-fast-centroids.Rds")
+saveRDS(to_map_quiet, "data/costa-caparica-quiet-routes.Rds")
+saveRDS(to_map_fast, "data/costa-caparica-fast-routes.Rds")
 
 
 
