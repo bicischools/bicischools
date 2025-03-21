@@ -1,158 +1,71 @@
 library(sf)
-library(ggplot2)
-library(units)
-library(tidyverse)
 library(tmap)
 tmap_mode("view")
+library(dplyr)
+library(stplanr)
 
-# Explore existing data for Escola Básica Adriano Correia de Oliveira
+# Input SIM model results
+res_output = read_sf("res_output_almada.geojson")
 
-schools_year = readRDS("data/SCHOOLS_year.Rds")
-existing = schools_year |> filter(DGEEC_id == 1106908)
-# View(existing)
-sum(existing$STUDENTS)
-# [1] 110 # this is different from the case study dataset because it's from a different year
+schools_c1 = readRDS("data/c1.Rds")
+schools_c1 = schools_c1 |>
+  filter(MUNICIPIO == "Almada")
 
-# Case study dataset
-
-home = readRDS("../internal/Bicischools_home_sample.Rds")
-school = readRDS("../internal/Bicischools_school_sample.Rds")
-st_crs(home) = 4326
-st_crs(school) = 4326
-
-# tm_shape(home) + tm_lines()
-
-# tm_shape(school) + tm_dots()
-
-home_dots = st_as_sf(home$home_coords)
-# tm_shape(home_dots) + tm_dots()
-
-dim(home_dots)
-# [1] 169   1
-
-# the 169 students have 100 unique home locations (so it includes kids within the same family)
-length(unique(home$home_coords))
-# [1] 100 
-
-# Distance frequency curves -----------------------------------------------
-# For routes and desire lines
-home = home |> 
-  mutate(
-    linestring_route_length = st_length(geometry),
-    desire_line_length = st_distance(home_coords, school)[,1]
-    )
-
-ggplot(home, aes(desire_line_length)) +
-  geom_histogram()
-ggplot(home, aes(linestring_route_length)) +
-  geom_histogram()
-
-summary(home$desire_line_length)
-# Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-# 80.92   248.09   713.56  2167.34  1973.25 28564.06
-
-summary(home$linestring_route_length)
-# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# 321.6   592.3  1243.2  3202.8  2822.0 38486.3
-
-below_5km_desire = home |> 
-  drop_units() |> 
-  filter(desire_line_length < 5000)
-dim(below_5km_desire)
-# [1] 153   5
-
-below_5km = home |> 
-  drop_units() |> 
-  filter(linestring_route_length < 5000)
-dim(below_5km)
-# [1] 143   5
-dim(below_5km)[1]/dim(home)[1] # 85% of students live within 5km route length of school
-# [1] 0.8461538 
-
-below_3km = home |> 
-  drop_units() |> 
-  filter(linestring_route_length < 3000,
-         linestring_route_length > 500)
-dim(below_3km)
-# [1] 94   5
-dim(below_3km)[1]/dim(home)[1] # 56% of students live between 500m and 3km route length from school
-# [1] 0.556213 
-
-
-# Assign home locations to enumeration districts --------------------------
-# So we can route from zone centroids instead of home postcodes, for anonymity
+schools_c1$ciclo_school = grepl("Escola Básica n.º 2 da Costa da Caparica, Almada", schools_c1$ESCOLA)
+ciclo_school = schools_c1[which(schools_c1$ciclo_school),]
 
 bgri = read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
 bgri_4326 = st_transform(bgri, 4326)
 bgri_4326 = st_make_valid(bgri_4326)
-home_assigned = st_join(bgri_4326, home_dots, left = F)
-home_assigned = home_assigned |> 
+
+bgri_almada = bgri_4326 |> 
+  filter(DTMN21 == 1503)
+
+zone_counts = bgri_almada |> 
   select(OBJECTID, DTMN21, N_INDIVIDUOS_0_14)
-
-tm_shape(home_assigned) + tm_polygons()
-
-# The 169 students live in 87 different enumeration zones
-length(unique(home_assigned$OBJECTID))
-# [1] 87
-
-# Now make table showing the number of students in each zone (list each zone once only)
-zone_counts = home_assigned |> 
-  group_by(OBJECTID, DTMN21, N_INDIVIDUOS_0_14) |> 
-  summarise(n_students = n()) |> 
-  ungroup()
-
-saveRDS(zone_counts, "data/zone_counts.Rds")
-
-# Then assign centroids for each zone to generate OD dataset at the zone-school level with counts
 zone_centroids = st_centroid(zone_counts)
 
-tm_shape(zone_centroids) + tm_dots()
-
-# Filter out centroids >5km euclidean distance from the school 
+# Zone centroids within 5km of school
 zone_centroids = zone_centroids |> 
   mutate(
-    desire_line_length = st_distance(geom, school)[,1],
-    desire_line_length = drop_units(desire_line_length)
+    desire_line_length = st_distance(geom, ciclo_school)[,1],
+    desire_line_length = units::drop_units(desire_line_length)
   )
-
 centroids_5km = zone_centroids |> 
   filter(desire_line_length < 5000)
 
-tm_shape(centroids_5km) + tm_dots()
+# Get OD desire lines for Costa da Caparica school
+res_cc = res_output |> 
+  filter(
+    D == ciclo_school$DGEEC_id
+    # , !is.na(trips_modelled)
+    )
 
-saveRDS(centroids_5km, "data/centroids_5km.Rds")
-centroids_5km = readRDS("data/centroids_5km.Rds")
+tm_shape(res_cc) + tm_lines()
 
-od_5km = centroids_5km |>
-  mutate(d = school$geometry)
+res_cc = res_cc |> 
+  mutate(
+    desire_line_length = st_length(res_cc),
+    desire_line_length = units::drop_units(desire_line_length)
+  )
 
-od_5km$geometry = 
-  Map(st_union, od_5km$geom, od_5km$d) |> 
-  st_as_sfc(crs = st_crs(od_5km)) |> 
-  st_cast("LINESTRING")
-st_geometry(od_5km) = "geometry"
-od_5km = od_5km |> 
-  select(-c(geom, d))
-
-# Route trips from zone centroids to school -------------------------------
-
-library(stplanr)
+# Convert desire lines to routes
 plan = "quiet"
 plans = c("quiet", "fast")
 
 for(plan in plans) {
-  location = paste0("../internal/routes-", plan, "-casestudy.Rds")
+  location = paste0("../internal/routes-", plan, "-costa-da-caparica.Rds")
   routes_plan_location = location
   if (file.exists(routes_plan_location)) {
     routes_plan = readRDS(routes_plan_location)
   } else {
     plan_name = paste0(plan, "est")
-    routes_plan = route(l = od_5km, route_fun = cyclestreets::journey, plan = plan_name)
+    routes_plan = route(l = res_cc, route_fun = cyclestreets::journey, plan = plan_name)
     routes_plan = routes_plan |> 
       group_by(route_number) |> 
       mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |> 
       ungroup()
-    saveRDS(routes_plan, paste0("../internal/routes-", plan, "-casestudy.Rds"))
+    saveRDS(routes_plan, paste0("../internal/routes-", plan, "-costa-da-caparica.Rds"))
   }
   class(routes_plan$route_number) = "character"
   class(routes_plan$length) = "numeric"
@@ -163,19 +76,11 @@ for(plan in plans) {
   assign(x = paste0("routes_", plan), value = routes_plan)
 }
 
-quiet_few = routes_quiet |> 
-  filter(route_number %in% c(20,3,5,7,11))
-fast_few = routes_fast |> 
-  filter(route_number %in% c(20,3,5,7,11))
-  
-# tm_shape(routes_fast) + tm_lines()
-
-# For median route lengths
 for(plan in plans) {
   routes_plan_all = get(paste0("routes_", plan, "_all"))
   route_summaries = routes_plan_all |> 
     group_by(route_number) |> 
-    summarise(n_students = mean(n_students),
+    summarise(trips_modelled = mean(trips_modelled),
               length = mean(length),
               desire_line_length = mean(desire_line_length)
     )
@@ -184,21 +89,20 @@ for(plan in plans) {
 
 # median route length for all students living within 5km euclidean distance of the school
 library(matrixStats)
-weightedMedian(route_summaries_all_quiet$length, route_summaries_all_quiet$n_students)
-# [1] 1068.333
-weightedMedian(route_summaries_all_fast$length, route_summaries_all_fast$n_students)
-# [1] 1064
+weightedMedian(route_summaries_all_quiet$length, route_summaries_all_quiet$trips_modelled)
+# [1] 814.0006
+weightedMedian(route_summaries_all_fast$length, route_summaries_all_fast$trips_modelled)
+# [1] 785.9941
 
 # median desire line length for all students living within 5km euclidean distance of the school
-library(matrixStats)
-weightedMedian(od_5km$desire_line_length, od_5km$n_students)
-# [1] 552.1148
+weightedMedian(res_cc$desire_line_length, res_cc$trips_modelled)
+# [1] 564.7516
 
-# n_students within 5km euclidean distance
+# trips_modelled within 5km euclidean distance
 under_5 = route_summaries_all_quiet |> 
   filter(desire_line_length < 5000)
-sum(under_5$n_students)
-# [1] 153
+sum(under_5$trips_modelled)
+# [1] 238
 
 # PCT cycle uptake --------------------------------------------------------
 
@@ -212,14 +116,14 @@ for(plan in plans) {
       pcycle_godutch = pct::uptake_pct_godutch_school2(
         case_when(length > 30000 ~ 30000, TRUE ~ length),
         route_hilliness),
-      bicycle_godutch = pcycle_godutch * n_students
+      bicycle_godutch = pcycle_godutch * trips_modelled
     )
   assign(paste0("routes_", plan, "_pct"), routes_plan_pct)
   rnet_plan_raw = routes_plan_pct |> 
-    overline(attrib = c("n_students", "bicycle_godutch", "quietness", "gradient_smooth"), 
+    overline(attrib = c("trips_modelled", "bicycle_godutch", "quietness", "gradient_smooth"), 
              fun = list(sum = sum, mean = mean))
   rnet_plan = rnet_plan_raw |> 
-    transmute(n_students = n_students_sum, 
+    transmute(trips_modelled = trips_modelled_sum, 
               bicycle_godutch = bicycle_godutch_sum,
               quietness = round(quietness_mean),
               gradient = round(gradient_smooth_mean*100))
@@ -227,13 +131,9 @@ for(plan in plans) {
 }
 
 tm_shape(rnet_quiet) +
-  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
-  tm_shape(centroids_5km) + tm_bubbles("n_students") +
-  tm_shape(school) + tm_bubbles(col = "green")
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) 
 tm_shape(rnet_fast) +
-  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100)) +
-  tm_shape(centroids_5km) + tm_bubbles("n_students") +
-  tm_shape(school) + tm_bubbles(col = "green")
+  tm_lines("bicycle_godutch", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
 
 m2 = tm_shape(rnet_quiet |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
@@ -252,64 +152,57 @@ m10 = tm_shape(rnet_fast |> rename(`Cycle friendliness` = quietness)) +
 
 summary(routes_quiet$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# 144    1890    3024    2909    3856    4967 
+# 102    1127    2062    2292    3418    4829  
 summary(routes_fast$length)
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# 144    1496    2525    2680    3637    4918 
+# 102     965    1824    2217    3704    4982 
 
 
 # Total number of students cycling to school under Go Dutch
 for(plan in plans) {
   routes_plan_pct = get(paste0("routes_", plan, "_pct"))
   route_summaries = routes_plan_pct |> 
+    rename(OBJECTID = O) |> 
     group_by(OBJECTID,
              route_number, 
-             n_students, 
+             trips_modelled, 
              bicycle_godutch, 
              length
-             ) |> 
+    ) |> 
     summarise() |> 
     ungroup()
   assign(paste0("route_summaries_", plan), route_summaries)
 }
 
-quiet_join = route_summaries_quiet |> 
-  sf::st_drop_geometry() |> 
+quiet_join = route_summaries_quiet |>
+  sf::st_drop_geometry() |>
   select(OBJECTID, route_number, bicycle_godutch)
 centroids_quiet_5km = inner_join(centroids_5km, quiet_join, by = "OBJECTID")
 
-fast_join = route_summaries_fast |> 
-  sf::st_drop_geometry() |> 
+fast_join = route_summaries_fast |>
+  sf::st_drop_geometry() |>
   select(OBJECTID, route_number, bicycle_godutch)
 centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
 
 
-m0 = tm_shape(zone_centroids |> rename(`Number of students` = n_students)) + tm_bubbles("Number of students", alpha = 0.3) +
-  tm_shape(school) + tm_bubbles(col = "green")
-m1 = tm_shape(centroids_quiet_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(quiet_few) + tm_lines(lwd = 2)
-m5 = tm_shape(centroids_fast_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(col = "green") +
-  tm_shape(fast_few) + tm_lines(lwd = 2)
+tm_shape(zone_centroids) + tm_bubbles("N_INDIVIDUOS_0_14", alpha = 0.3) +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green")
+tm_shape(centroids_quiet_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green")
+tm_shape(centroids_fast_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green")
 
 # n students within 5km route distance of school
-sum(route_summaries_quiet$n_students)
-# [1] 140
-sum(route_summaries_fast$n_students)
-# [1] 148
+sum(route_summaries_quiet$trips_modelled)
+# [1] 213.9925
+sum(route_summaries_fast$trips_modelled)
+# [1] 215.2971
 
 # n_cyclists under go dutch
 sum(route_summaries_quiet$bicycle_godutch)
-# [1] 40.38902
+# [1] 75.2093
 sum(route_summaries_fast$bicycle_godutch)
-# [1] 40.47256
-
-
-# Mean quietness of routes - not working yet
-rnet_quiet = rnet_quiet |> 
-  mutate(quietness_cycled = quietness*bicycle_godutch)
-
+# [1] 75.48766
 
 
 # Bundling function -------------------------------------------------------
@@ -335,7 +228,7 @@ cycle_bus_routes = function(
   rnet_union = sf::st_union(rnet_subset)
   rnet_buffer = geo_buffer(rnet_union, dist = buffer)
   routes_crop = sf::st_intersection(routes, rnet_buffer)
-
+  
   routes_subset = routes_crop |> 
     distinct(geometry)
   routes_subset$id = seq.int(nrow(routes_subset))
@@ -430,22 +323,17 @@ top_routes_fast = filter_routes(routes = ordered_routes_fast, buffer = 300, top_
 
 # Bubbles by number of students
 tm_shape(top_routes_quiet) + tm_lines() +
-  tm_shape(centroids_quiet_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_quiet_5km) + tm_bubbles("N_INDIVIDUOS_0_14")
 tm_shape(top_routes_fast) + tm_lines() +
-  tm_shape(centroids_fast_5km) + tm_bubbles("n_students")
+  tm_shape(centroids_fast_5km) + tm_bubbles("N_INDIVIDUOS_0_14")
 
 # Bubbles by Go Dutch uptake
 # m4 = tm_shape(centroids_quiet_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-#   tm_shape(school) + tm_bubbles(col = "green") +
+#   tm_shape(ciclo_school) + tm_bubbles(col = "green") +
 #   tm_shape(top_routes_quiet) + tm_lines(lwd = 2)
 # m8 = tm_shape(centroids_fast_5km |> rename(`Potential cyclists` = bicycle_godutch)) + tm_bubbles("Potential cyclists", alpha = 0.3) + 
-#   tm_shape(school) + tm_bubbles(col = "green") +
+#   tm_shape(ciclo_school) + tm_bubbles(col = "green") +
 #   tm_shape(top_routes_fast) + tm_lines(lwd = 2)
-
-# Could also add feature to function so routes are penalised if students live far away from the route origin?
-
-tmap_arrange(m9, m10)
-
 
 # Matching centroids to routes --------------------------------------------
 
@@ -511,76 +399,20 @@ to_map_fast = top_routes_fast |>
   arrange(desc(`Candidate route`))
 
 m4 = tm_shape(cents_quiet |> rename(`Potential cyclists` = bicycle_godutch)) + 
-  tm_dots(size = "Potential cyclists", fill = "pick", fill.legend = tm_legend_hide(), size.legend = tm_legend_hide()) +
-  tm_shape(school) + tm_bubbles(col = "green") +
+  tm_bubbles("Potential cyclists", col = "pick") +
+  tm_shape(ciclo_school) + tm_bubbles(col = "green") +
   tm_shape(to_map_quiet) + 
-  tm_lines(lwd = 3, col = "Candidate route") 
+  tm_lines(lwd = 3, col = "Candidate route")
 m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) + 
-  tm_bubbles(size = "Potential cyclists", fill = "pick", fill.legend = tm_legend_hide(), size.legend = tm_legend_hide()) +
+  tm_bubbles("Potential cyclists", col = "pick") +
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(to_map_fast) + 
   tm_lines(lwd = 3, col = "Candidate route")
 
-# For panel figure in paper
-tmap_arrange(m2, m3, m4, 
-             # m6, m7, m8, 
-             nrow = 1)
+saveRDS(cents_quiet, "data/costa-caparica-quiet-centroids.Rds")
+saveRDS(cents_fast, "data/costa-caparica-fast-centroids.Rds")
+saveRDS(to_map_quiet, "data/costa-caparica-quiet-routes.Rds")
+saveRDS(to_map_fast, "data/costa-caparica-fast-routes.Rds")
 
-# For new panel figure showing centroids
-tmap_arrange(m0, m1, m5, nrow = 1)
 
-# Stats for paper ---------------------------------------------------------
 
-# Quiet routes
-# % of students (living within 5km of the school) accommodated for by the top 3 bike bus routes
-sum(cents_quiet$n_students.x)
-# [1] 34
-sum(cents_quiet$n_students.x) / sum(under_5$n_students)
-# [1] 0.2222222
-
-# % of Go Dutch cycling potential accommodated within the top 3 bike bus routes
-sum(cents_quiet$bicycle_godutch) / sum(route_summaries_quiet$bicycle_godutch)
-# [1] 0.4549882
-sum(cents_quiet$bicycle_godutch)
-
-# Bike bus route lengths
-ll = cents_quiet |> filter(id %in% top_routes_quiet$id)
-min(ll$bike_bus_length)
-# [1] 2053.585
-max(ll$bike_bus_length)
-# [1] 2387.35
-
-# Median distance travelled along bike bus
-weightedMedian(cents_quiet$bike_bus_length, w = cents_quiet$bicycle_godutch)
-# [1] 2130.639
-
-# Distances from centroids to the bike bus routes
-weightedMedian(cents_quiet$dist_to_bike_bus, w = cents_quiet$bicycle_godutch)
-# [1] 562.6769
-
-# Fast routes
-# % of students (living within 5km of the school) accommodated for by the top 3 bike bus routes
-sum(cents_fast$n_students.x)
-# [1] 39
-sum(cents_fast$n_students.x) / sum(under_5$n_students)
-# [1] 0.254902
-
-# % of Go Dutch cycling potential accommodated within the top 3 bike bus routes
-sum(cents_fast$bicycle_godutch) / sum(route_summaries_fast$bicycle_godutch)
-# [1] 0.4103948
-sum(cents_fast$bicycle_godutch)
-
-# Bike bus route lengths
-ll = cents_fast |> filter(id %in% top_routes_fast$id)
-min(ll$bike_bus_length)
-# [1] 1786.382
-max(ll$bike_bus_length)
-# [1] 2544.631
-
-# Median distance travelled along bike bus
-weightedMedian(cents_fast$bike_bus_length, w = cents_fast$bicycle_godutch)
-# [1] 1786.381
-
-# Distances from centroids to the bike bus routes
-weightedMedian(cents_fast$dist_to_bike_bus, w = cents_fast$bicycle_godutch)
-# [1] 687.5779
