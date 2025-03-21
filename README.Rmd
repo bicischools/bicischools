@@ -59,6 +59,7 @@ usethis::use_github_action("check-standard")
 pkgdown::build_site_github_pages()
 usethis::use_pkgdown_github_pages()
 usethis::use_build_ignore("data/")
+usethis::use_data_raw()
 ```
 
 What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
