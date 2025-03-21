@@ -511,12 +511,12 @@ to_map_fast = top_routes_fast |>
   arrange(desc(`Candidate route`))
 
 m4 = tm_shape(cents_quiet |> rename(`Potential cyclists` = bicycle_godutch)) + 
-  tm_bubbles("Potential cyclists", fill = "pick") +
+  tm_dots(size = "Potential cyclists", fill = "pick", fill.legend = tm_legend_hide(), size.legend = tm_legend_hide()) +
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(to_map_quiet) + 
   tm_lines(lwd = 3, col = "Candidate route") 
 m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) + 
-  tm_bubbles("Potential cyclists", col = "pick") +
+  tm_bubbles(size = "Potential cyclists", fill = "pick", fill.legend = tm_legend_hide(), size.legend = tm_legend_hide()) +
   tm_shape(school) + tm_bubbles(col = "green") +
   tm_shape(to_map_fast) + 
   tm_lines(lwd = 3, col = "Candidate route")
