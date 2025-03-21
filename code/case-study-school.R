@@ -444,13 +444,7 @@ tm_shape(top_routes_fast) + tm_lines() +
 
 # Could also add feature to function so routes are penalised if students live far away from the route origin?
 
-
-# For panel figure in paper
-tmap_arrange(m1, m2, m3, m4, m5, m6, m7, m8, nrow = 2)
-# tmap_arrange(m1, m5, m2, m6, m3, m7, m4, m8, nrow = 4)
-
 tmap_arrange(m9, m10)
-
 
 
 # Matching centroids to routes --------------------------------------------
@@ -590,4 +584,3 @@ weightedMedian(cents_fast$bike_bus_length, w = cents_fast$bicycle_godutch)
 # Distances from centroids to the bike bus routes
 weightedMedian(cents_fast$dist_to_bike_bus, w = cents_fast$bicycle_godutch)
 # [1] 687.5779
-
