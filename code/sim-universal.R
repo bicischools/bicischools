@@ -48,7 +48,6 @@ home_zones = home_zones |>
 sum(home_zones$pupils_estimated)
 sum(schools_c1$n_pupils)
 
-#| echo: true
 max_dist = 3000 # meters
 od_from_si = simodels::si_to_od(home_zones, schools_c1, max_dist = max_dist)
 
@@ -106,20 +105,11 @@ res_d = od_res |>
     Modelled = sum(interaction),
     Type = "Destination"
   )
-# res_od = od_res |>
-#   transmute(
-#     Observed = frequency,
-#     Modelled = interaction,
-#     Type = "OD"
-#   )
-res_combined = bind_rows(res_o, res_d
-                         # , res_od
-                         ) |>
+
+res_combined = bind_rows(res_o, res_d) |>
   # Create ordered factor with types:
   mutate(
-    Type = factor(Type, levels = c("Origin", "Destination"
-                                   # , "OD"
-                                   ))
+    Type = factor(Type, levels = c("Origin", "Destination"))
   )
 g_combined = res_combined |>
   ggplot() +
@@ -130,12 +120,8 @@ g_combined = res_combined |>
       title = "Model fit at origin and destination levels (unconstrained)",
       x = "Observed",
       y = "Modelled"
-    ) 
-#  + g_d 
-#  + g_od
+    )
 g_combined
-# rsq = cor(od_res$frequency, od_res$interaction, use = "complete.obs")^2
-# rsq
 
 # Aim: create function that takes in od_res and returns a ggplot object
 plot_od_fit = function(od_res, title = "(unconstrained)") {
@@ -153,24 +139,13 @@ plot_od_fit = function(od_res, title = "(unconstrained)") {
       Modelled = sum(interaction),
       Type = "Destination"
     )
-  # res_od = od_res |>
-  #   transmute(
-  #     Observed = frequency,
-  #     Modelled = interaction,
-  #     Type = "OD"
-  #   )
-  res_combined = bind_rows(res_o, res_d
-                           # , res_od
-                           ) |>
+  res_combined = bind_rows(res_o, res_d) |>
     # Create ordered factor with types:
     mutate(
-      Type = factor(Type, levels = c("Origin", "Destination"
-                                     # , "OD"
-                                     ))
+      Type = factor(Type, levels = c("Origin", "Destination"))
     )
   rsq_o = cor(res_o$Observed, res_o$Modelled, use = "complete.obs")^2
   rsq_d = cor(res_d$Observed, res_d$Modelled, use = "complete.obs")^2
-  # rsq_od = cor(res_od$Observed, res_od$Modelled, use = "complete.obs")^2
   rsq_summary = data.frame(
     rsq = c(rsq_o, rsq_d) |> round(3),
     Type = c("Origin", "Destination")
