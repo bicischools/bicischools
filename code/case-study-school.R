@@ -236,9 +236,9 @@ tm_shape(rnet_fast) +
   tm_shape(school) + tm_bubbles(col = "green")
 
 m2 = tm_shape(rnet_quiet |> rename(`Potential cyclists` = bicycle_godutch)) +
-  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100), textNA = "")
 m6 = tm_shape(rnet_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
-  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100))
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(0, 5, 10, 100), textNA = "")
 
 quietness_breaks = c(0, 25, 50, 75, 100)
 pal = c('#882255','#CC6677', '#44AA99', '#117733')
@@ -388,11 +388,11 @@ for(plan in plans) {
 
 rnet_quiet_subset = rnet_quiet[rnet_quiet[[attribute_trips]] > min_trips,]
 m3 = tm_shape(rnet_quiet_subset |> rename(`Potential cyclists` = bicycle_godutch)) +
-  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100), textNA = "")
 
 rnet_fast_subset = rnet_fast[rnet_fast[[attribute_trips]] > min_trips,]
 m7 = tm_shape(rnet_fast_subset |> rename(`Potential cyclists` = bicycle_godutch)) +
-  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100))
+  tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100), textNA = "")
 
 # Remove routes with start points too close to other higher ranked routes
 
