@@ -522,6 +522,11 @@ m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_lines(lwd = 3, col = "Candidate route")
 
 # For panel figure in paper
+saveRDS(rnet_quiet, "../paper/Paper_JTG/route-data/rnet_quiet.Rds")
+saveRDS(to_map_quiet, "../paper/Paper_JTG/route-data/to_map_quiet.Rds")
+saveRDS(cents_quiet, "../paper/Paper_JTG/route-data/cents_quiet.Rds")
+saveRDS(school, "../paper/Paper_JTG/route-data/school.Rds")
+
 tmap_arrange(m2, m3, m4, 
              # m6, m7, m8, 
              nrow = 1)
