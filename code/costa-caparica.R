@@ -414,5 +414,19 @@ saveRDS(cents_fast, "data/costa-caparica-fast-centroids.Rds")
 saveRDS(to_map_quiet, "data/costa-caparica-quiet-routes.Rds")
 saveRDS(to_map_fast, "data/costa-caparica-fast-routes.Rds")
 
+# Distance between top candidate route and scheduled bike bus stops
 
+# Top candidate route
+cc_quiet = readRDS("data/costa-caparica-quiet-routes.Rds")
+candidate1 = cc_quiet[3,]
+tm_shape(candidate1) + tm_lines()
 
+# Scheduled stops
+actual_route_geo = sf::read_sf("../paper/route-data/costadacaparica.geojson", quiet = TRUE)
+actual_route_geo = actual_route_geo |> 
+  filter(! Stop == "Chegada")
+tm_shape(actual_route_geo) + tm_dots()
+
+actual_route_geo$distance = st_distance(actual_route_geo, candidate1)
+mean(actual_route_geo$distance)
+max(actual_route_geo$distance)
