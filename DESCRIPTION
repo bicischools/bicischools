@@ -15,7 +15,9 @@ Imports:
     pct,
     sf,
     stplanr,
-    dplyr
+    dplyr,
+    simodels,
+    rlang
 Remotes:
    itsleeds/pct
 URL: https://bicischools.github.io/bicischools/

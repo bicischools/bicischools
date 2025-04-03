@@ -243,6 +243,7 @@ m6 = tm_shape(rnet_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
 quietness_breaks = c(0, 25, 50, 75, 100)
 pal = c('#882255','#CC6677', '#44AA99', '#117733')
 
+# For Figure 1:
 m9 = tm_shape(rnet_quiet |> rename(`Cycle friendliness` = quietness)) +
   tm_lines("Cycle friendliness", palette = pal, lwd = 3, breaks = quietness_breaks)
 m10 = tm_shape(rnet_fast |> rename(`Cycle friendliness` = quietness)) +
@@ -285,12 +286,12 @@ centroids_fast_5km = inner_join(centroids_5km, fast_join, by = "OBJECTID")
 
 
 m0 = tm_shape(zone_centroids |> rename(`Number of students` = n_students)) + tm_bubbles("Number of students", alpha = 0.3) +
-  tm_shape(school) + tm_bubbles(col = "green")
+  qtm(school, col = "black", fill = "black", size = 0.5)
 m1 = tm_shape(centroids_quiet_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(col = "green") +
+  qtm(school, col = "black", fill = "black", size = 0.5) +
   tm_shape(quiet_few) + tm_lines(lwd = 2)
 m5 = tm_shape(centroids_fast_5km |> rename(`'Go Dutch' cycling potential` = bicycle_godutch)) + tm_bubbles("'Go Dutch' cycling potential", alpha = 0.3) + 
-  tm_shape(school) + tm_bubbles(col = "green") +
+  qtm(school, col = "black", fill = "black", size = 0.5) +
   tm_shape(fast_few) + tm_lines(lwd = 2)
 
 # n students within 5km route distance of school
@@ -393,6 +394,28 @@ m3 = tm_shape(rnet_quiet_subset |> rename(`Potential cyclists` = bicycle_godutch
 rnet_fast_subset = rnet_fast[rnet_fast[[attribute_trips]] > min_trips,]
 m7 = tm_shape(rnet_fast_subset |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_lines("Potential cyclists", palette = "viridis", lwd = 2, breaks = c(3, 5, 10, 100), textNA = "")
+
+# Calculate proportion of network length that is quiet
+seventyfive = rnet_quiet_subset |> filter(quietness >= 75)
+seventyfive = seventyfive |> 
+  mutate(length = st_length(geometry))
+sum(seventyfive$length)
+rnet_quiet_subset_l = rnet_quiet_subset |> 
+  mutate(length = st_length(geometry))
+sum(seventyfive$length)/sum(rnet_quiet_subset_l$length)
+
+seventyfive = rnet_fast_subset |> filter(quietness >= 75)
+seventyfive = seventyfive |> 
+  mutate(length = st_length(geometry))
+sum(seventyfive$length)
+rnet_fast_subset_l = rnet_fast_subset |> 
+  mutate(length = st_length(geometry))
+sum(seventyfive$length)/sum(rnet_fast_subset_l$length)
+
+twentyfive = rnet_fast_subset |> filter(quietness < 25)
+twentyfive = twentyfive |> 
+  mutate(length = st_length(geometry))
+sum(twentyfive$length)/sum(rnet_fast_subset_l$length)
 
 # Remove routes with start points too close to other higher ranked routes
 
