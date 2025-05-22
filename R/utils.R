@@ -1,9 +1,9 @@
 #' Check CRS of two sf objects
 #'
-#' @param sf1
-#' @param sf2
+#' @param sf1 An sf object.
+#' @param sf2 An sf object.
 #'
-#' @returns
+#' @returns TRUE if CRSs are the same, FALSE otherwise.
 
 check_same_crs <- function(sf1, sf2) {
   # Check if inputs are sf objects
@@ -31,12 +31,13 @@ check_same_crs <- function(sf1, sf2) {
 
 #' Get a model for SIM calculation
 #'
-#' @param model
+#' @param model A character string specifying the model name.
 #'
-#' @returns
+#' @returns A function representing the specified model.
 #' @export
 #'
 #' @examples
+#' get_models("gravity")
 #'
 get_models <- function(model) {
   models <- list(

@@ -1,21 +1,26 @@
 #' Title
 #'
-#' @param origins
-#' @param destinations
-#' @param model
-#' @param balancing
-#' @param constraining
-#' @param max_dist
-#' @param origins.id
-#' @param origins.size
-#' @param destinations.id
-#' @param destinations.size
-#' @param ...
+#' @param origins An sf object representing the origins.
+#' @param destinations An sf object representing the destinations.
+#' @param model A character string specifying the model to use.
+#' @param balancing A character string specifying the balancing method. One of "origins", "destinations", or "both".
+#' @param max_dist A numeric value specifying the maximum distance for interaction.
+#' @param origins.id A character string specifying the ID column in the origins sf object.
+#' @param origins.size A character string specifying the size column in the origins sf object.
+#' @param destinations.id A character string specifying the ID column in the destinations sf object.
+#' @param destinations.size A character string specifying the size column in the destinations sf object.
+#' @param keep_cols A logical value. If TRUE, all columns from the input data are kept. If FALSE (default), only O, D and the output_col are kept.
+#' @param output_col A character string specifying the name of the column for the modelled trips (default is "modelled_trips").
+#' @param max_iter An integer, the maximum number of iterations for the balancing algorithm (default is 25).
+#' @param ... Additional arguments to be passed to the model function.
 #'
-#' @returns
+#' @returns An sf object with the modelled trips.
 #' @export
+#' @importFrom dplyr select all_of
+#' @importFrom rlang .data
 #'
 #' @examples
+#' # sim_schools(origins, destinations, model = "gravity")
 #'
 
 #'
@@ -98,7 +103,7 @@ sim_schools <- function(
 
   if (!keep_cols) {
     const_sim <- const_sim |>
-      select(O, D, {{ output_col }})
+      dplyr::select(dplyr::all_of(c("O", "D", output_col)))
   }
 
   return(const_sim)
