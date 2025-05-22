@@ -7,20 +7,21 @@ tmap_mode("view")
 library(mapview)
 
 layers = st_layers("data/ComboiosBicicleta_Lisbon_2024.kmz")
-comboios = st_read("data/ComboiosBicicleta_Lisbon_2024.kmz",
-                   layer = layers$name[1]) |>
-  mutate(name = layers$name[1]) |> 
+comboios = st_read(
+  "data/ComboiosBicicleta_Lisbon_2024.kmz",
+  layer = layers$name[1]
+) |>
+  mutate(name = layers$name[1]) |>
   st_collection_extract("LINESTRING")
 
-for(i in layers$name){
-  comboios_i = st_read("data/ComboiosBicicleta_Lisbon_2024.kmz",
-          layer = i) |>
-    mutate(name = i) |> 
+for (i in layers$name) {
+  comboios_i = st_read("data/ComboiosBicicleta_Lisbon_2024.kmz", layer = i) |>
+    mutate(name = i) |>
     st_collection_extract("LINESTRING")
   comboios = comboios |> bind_rows(comboios_i)
 }
 
-comboios = comboios |> 
+comboios = comboios |>
   distinct() |>
   group_by(name) |>
   summarise(geometry = st_union(geometry))

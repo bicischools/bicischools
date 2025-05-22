@@ -1,4 +1,3 @@
-
 bgri = sf::read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
 bgri_4326 = sf::st_transform(bgri, 4326)
 bgri_4326 = sf::st_make_valid(bgri_4326)
@@ -17,13 +16,13 @@ schools_c1 = schools_c1 |>
 
 # See schools.qmd
 # schools_c1 = readRDS("data/c1_public.Rds")
-schools_c1 = schools_c1 |> 
+schools_c1 = schools_c1 |>
   mutate(
     n_pupils = STUDENTS
-  ) |> 
+  ) |>
   select(DGEEC_id, n_pupils)
 
-home_zones = bgri_4326 |> 
+home_zones = bgri_4326 |>
   select(OBJECTID, N_INDIVIDUOS_0_14)
 
 
@@ -42,14 +41,20 @@ results <- sim_schools(
 )
 
 
+results |>
+  st_drop_geometry() |>
+  summarise(across(modelled_trips, sum), .by = c(O, origin_N_INDIVIDUOS_0_14))
 
- 
-results |> st_drop_geometry() |>  summarise(across(modelled_trips,sum),.by = c(O,origin_N_INDIVIDUOS_0_14))
 
+origin_only <- results |>
+  st_drop_geometry() |>
+  select(O, origin_N_INDIVIDUOS_0_14) |>
+  unique()
 
-origin_only <- results |> st_drop_geometry() |> select(O,origin_N_INDIVIDUOS_0_14) |> unique()
-
-dest_only <- results |> st_drop_geometry() |> select(D,destination_n_pupils) |> unique()
+dest_only <- results |>
+  st_drop_geometry() |>
+  select(D, destination_n_pupils) |>
+  unique()
 
 results$modelled_trips |> sum()
 
@@ -59,5 +64,3 @@ sum(home_zones$N_INDIVIDUOS_0_14)
 
 dest_only |> pull(destination_n_pupils) |> sum()
 sum(schools_c1$n_pupils)
-
-

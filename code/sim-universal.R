@@ -1,5 +1,3 @@
-
-
 remotes::install_cran("simodels")
 library(tidyverse)
 library(patchwork)
@@ -15,13 +13,13 @@ schools_c1 = readRDS("data/c1.Rds")
 schools_c1 = schools_c1 |>
   filter(MUNICIPIO == "Almada")
 
-schools_c1 = schools_c1 |> 
+schools_c1 = schools_c1 |>
   mutate(
     n_pupils = STUDENTS
-  ) |> 
+  ) |>
   select(DGEEC_id, n_pupils)
 
-home_zones = bgri_4326 |> 
+home_zones = bgri_4326 |>
   select(OBJECTID, N_INDIVIDUOS_0_14)
 
 g1 = home_zones |>
@@ -34,7 +32,7 @@ g2 = schools_c1 |>
   labs(title = "Destinations (Schools)")
 g1 + g2
 
-zone_overestimate_factor = 
+zone_overestimate_factor =
   (sum(home_zones$N_INDIVIDUOS_0_14) /
     sum(schools_c1$n_pupils))
 zone_overestimate_factor
@@ -58,9 +56,9 @@ m1 = od_from_si |>
 
 # using testing OD dataset based on the case study school, with destination code matching the one for Adriano Correia school in `schools_geo`
 case_study_school = readRDS("data/zone_counts.Rds")
-od_observed = case_study_school |> 
-  sf::st_drop_geometry() |> 
-  mutate(D = 1106908) |> 
+od_observed = case_study_school |>
+  sf::st_drop_geometry() |>
+  mutate(D = 1106908) |>
   select(OBJECTID, D, n_students)
 names(od_observed)[1:3] = c("O", "D", "frequency")
 # join od_observed to od_from_si:
@@ -73,7 +71,7 @@ names(od_from_si)
 
 gravity_model = function(beta, d, m, n) {
   m * n * exp(-beta * d / 1000)
-} 
+}
 # perform SIM
 od_res = simodels::si_calculate(
   od_from_si,
@@ -85,7 +83,8 @@ od_res = simodels::si_calculate(
   beta = 0.8
 )
 
-interaction_overestimate_factor = sum(schools_c1$n_pupils) / sum(od_res$interaction)
+interaction_overestimate_factor = sum(schools_c1$n_pupils) /
+  sum(od_res$interaction)
 od_res = od_res |>
   dplyr::mutate(
     interaction = interaction * interaction_overestimate_factor
@@ -113,14 +112,14 @@ res_combined = bind_rows(res_o, res_d) |>
   )
 g_combined = res_combined |>
   ggplot() +
-    geom_point(aes(x = Observed, y = Modelled)) +
-    geom_smooth(aes(x = Observed, y = Modelled), method = "lm") +
-    facet_wrap(~Type, scales = "free") +
-    labs(
-      title = "Model fit at origin and destination levels (unconstrained)",
-      x = "Observed",
-      y = "Modelled"
-    )
+  geom_point(aes(x = Observed, y = Modelled)) +
+  geom_smooth(aes(x = Observed, y = Modelled), method = "lm") +
+  facet_wrap(~Type, scales = "free") +
+  labs(
+    title = "Model fit at origin and destination levels (unconstrained)",
+    x = "Observed",
+    y = "Modelled"
+  )
 g_combined
 
 # Aim: create function that takes in od_res and returns a ggplot object
@@ -155,23 +154,22 @@ plot_od_fit = function(od_res, title = "(unconstrained)") {
     # Add rsquared info:
     mutate(Type = paste0(Type, " (R-squared: ", rsq, ")")) |>
     # Update factor so it's ordered (reverse order):
-  mutate(
-    Type = factor(Type, levels = unique(Type))
-  ) |>
-  ggplot() +
-  geom_point(aes(x = Observed, y = Modelled)) +
-  geom_smooth(aes(x = Observed, y = Modelled), method = "lm") +
-  facet_wrap(~Type, scales = "free") +
-  labs(
-    title = paste0("Model fit at origin, destination and OD levels ", title),
-    x = "Observed",
-    y = "Modelled"
-  )
-g_combined
+    mutate(
+      Type = factor(Type, levels = unique(Type))
+    ) |>
+    ggplot() +
+    geom_point(aes(x = Observed, y = Modelled)) +
+    geom_smooth(aes(x = Observed, y = Modelled), method = "lm") +
+    facet_wrap(~Type, scales = "free") +
+    labs(
+      title = paste0("Model fit at origin, destination and OD levels ", title),
+      x = "Observed",
+      y = "Modelled"
+    )
+  g_combined
 }
 # Test it:
 g = plot_od_fit(od_res)
-
 
 
 objective_function = function(beta) {
@@ -183,7 +181,8 @@ objective_function = function(beta) {
     n = destination_n_pupils,
     beta = beta
   )
-  interaction_overestimate_factor = sum(schools_c1$n_pupils) / sum(od_res$interaction)
+  interaction_overestimate_factor = sum(schools_c1$n_pupils) /
+    sum(od_res$interaction)
   od_res = od_res |>
     dplyr::mutate(
       trips = interaction * interaction_overestimate_factor
@@ -206,9 +205,8 @@ res_optimised = simodels::si_calculate(
   m = origin_pupils_estimated,
   n = destination_n_pupils,
   beta = beta_new
-  )
+)
 # cor(res_optimised$frequency, res_optimised$interaction, use = "complete.obs")^2
-
 
 res_constrained = simodels::si_calculate(
   od_from_si,
@@ -219,10 +217,10 @@ res_constrained = simodels::si_calculate(
   constraint_production = origin_pupils_estimated,
   beta = beta_new
 )
-# We need to remove the rows within 0 origin_pupils_estimated to avoid NaN errors 
-res_constrained = res_constrained |> 
+# We need to remove the rows within 0 origin_pupils_estimated to avoid NaN errors
+res_constrained = res_constrained |>
   filter(origin_pupils_estimated > 0)
-# res_constrained = res_constrained |> 
+# res_constrained = res_constrained |>
 #   mutate(interaction = tidyr::replace_na(interaction, 0))
 
 # Aim: check totals per origin
@@ -248,7 +246,7 @@ res_doubly_constrained = res_constrained |>
     interaction = interaction / modelled_overestimate_factor
   )
 # summary(res_doubly_constrained)
-sum(res_doubly_constrained$interaction) == sum(res_constrained$interaction) 
+sum(res_doubly_constrained$interaction) == sum(res_constrained$interaction)
 
 res_doubly_constrained_2 = res_doubly_constrained |>
   group_by(O) |>
@@ -332,5 +330,3 @@ res_output |>
 
 system("gh release list")
 system("gh release create v0.1.0 res_output.geojson res_output.csv")
-
-
