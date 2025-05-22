@@ -23,3 +23,5 @@ od = c(origin_sf, destination_sf)
 r3 = osrm::osrmTrip(od)
 plot(r3[[1]]$trip)
 ```
+
+Conclusion: osrmpkg is fine for now.
