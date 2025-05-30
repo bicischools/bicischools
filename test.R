@@ -73,5 +73,6 @@ results$O |> unique() |> length()
 results$D |> unique() |> length()
 
 
-routes <- results |> filter(D == (results$D |> unique() |> head(1))) |> bici_routes()
+unique_destination <- results$D |> unique() |> head(1)
+routes <- results |> filter(D == unique_destination) |> bici_routes()
 
