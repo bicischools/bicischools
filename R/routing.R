@@ -29,13 +29,13 @@ bici_routes <- function(
         # Extract origins from OD data, keeping only relevant columns
         origins <- .x |>
           tidyr::drop_na(dplyr::any_of(trips.col)) |>
-          sf::st_cast("POINT", warn = F) |>
+          sf::st_cast("POINT", warn = FALSE) |>
           dplyr::select(dplyr::any_of(c(origin.col, trips.col))) |>
           dplyr::slice_head(n = 1, by = dplyr::any_of(origin.col))
 
         # Extract destination from OD data, ensuring it is a single point
         destination <- .x[1, ] |>
-          sf::st_cast("POINT", warn = F) |>
+          sf::st_cast("POINT", warn = FALSE) |>
           dplyr::mutate(id = "destination") |>
           dplyr::select(dplyr::any_of("id")) |>
           dplyr::slice_tail(n = 1, by = dplyr::any_of("id"))
