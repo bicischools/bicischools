@@ -16,8 +16,6 @@
 #'
 #' @returns An sf object with the modelled trips.
 #' @export
-#' @importFrom dplyr select all_of
-#' @importFrom rlang .data
 #'
 #' @examples
 #' # sim_schools(origins, destinations, model = "gravity")

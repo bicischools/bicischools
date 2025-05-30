@@ -1,4 +1,4 @@
-#' Title
+#' Extract bike/bici routes for origins and destinations
 #'
 #' @param od.data A sf object with OD data
 #' @param osrm.profile for the osrmRoute function
@@ -8,12 +8,6 @@
 #'
 #' @returns An sf object with the routes to school
 #' @export
-#'
-#' @import dplyr
-#' @import tidyr
-#' @import sf
-#' @import osrm
-#' @import purrr
 #'
 #' @examples
 #' \dontrun{
@@ -70,9 +64,9 @@ bici_routes <- function(
 
 #' A function to query routes for several destinations to a single origin
 #'
-#' @param origins
-#' @param destination
-#' @param osrm.profile
+#' @param origins sf object with origins (homes)
+#' @param destination sf object with destination (school)
+#' @param osrm.profile string with the osrm profile to be used
 #'
 #' @returns an sf object with all the routes
 

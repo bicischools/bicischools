@@ -7,11 +7,11 @@
 batch_osrmRoutes(origins, destination, osrm.profile)
 }
 \arguments{
-\item{origins}{}
+\item{origins}{sf object with origins (homes)}
 
-\item{destination}{}
+\item{destination}{sf object with destination (school)}
 
-\item{osrm.profile}{}
+\item{osrm.profile}{string with the osrm profile to be used}
 }
 \value{
 an sf object with all the routes

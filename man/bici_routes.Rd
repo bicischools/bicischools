@@ -2,7 +2,7 @@
 % Please edit documentation in R/routing.R
 \name{bici_routes}
 \alias{bici_routes}
-\title{Title}
+\title{Extract bike/bici routes for origins and destinations}
 \usage{
 bici_routes(
   od.data,
@@ -27,7 +27,7 @@ bici_routes(
 An sf object with the routes to school
 }
 \description{
-Title
+Extract bike/bici routes for origins and destinations
 }
 \examples{
 \dontrun{
