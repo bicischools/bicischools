@@ -19,36 +19,31 @@ bici_routes <- function(
     origin.col = names(od.data)[1],
     destination.col = names(od.data)[2],
     trips.col = names(od.data)[grep("trip", names(od.data))]) {
+  # Nest data by destination column to group OD pairs by destination
   od.data |>
     tidyr::nest(.by = dplyr::any_of(destination.col)) |>
+    # Map over each group to calculate routes
     dplyr::mutate(route = purrr::map(
       .x = .data$data,
       function(.x) {
-        # .x = nested_d$data[[1]]
-        # .y = nested_d$D[[1]]
-
-        # Extracting origins from OD data
-
+        # Extract origins from OD data, keeping only relevant columns
         origins <- .x |>
           tidyr::drop_na(dplyr::any_of(trips.col)) |>
           sf::st_cast("POINT", warn = F) |>
           dplyr::select(dplyr::any_of(c(origin.col, trips.col))) |>
           dplyr::slice_head(n = 1, by = dplyr::any_of(origin.col))
 
-        # Extracting destination from OD data
-
+        # Extract destination from OD data, ensuring it is a single point
         destination <- .x[1, ] |>
           sf::st_cast("POINT", warn = F) |>
           dplyr::mutate(id = "destination") |>
           dplyr::select(dplyr::any_of("id")) |>
           dplyr::slice_tail(n = 1, by = dplyr::any_of("id"))
 
-        # Querying routes using osrm
-
+        # Query routes using OSRM
         routes <- batch_osrmRoutes(origins, destination, osrm.profile)
 
-        # Producing a clean sf object with the routes
-
+        # Combine origins with route details to produce a clean sf object
         clean_routes <- origins |>
           sf::st_drop_geometry() |>
           dplyr::bind_cols(routes[, c("duration", "distance")])
