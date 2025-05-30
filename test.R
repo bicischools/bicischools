@@ -59,7 +59,7 @@ dest_only <- results |>
   select(D, destination_n_pupils) |>
   unique()
 
-results$modelled_trips |> sum(na.rm = T)
+results$modelled_trips |> sum(na.rm = TRUE)
 
 
 origin_only |> pull(origin_N_INDIVIDUOS_0_14) |> sum()
