@@ -76,10 +76,16 @@ batch_osrmRoutes <- function(origins,
   lapply(
     1:nrow(origins),
     function(i) {
-      osrm::osrmRoute(
-        src = origins[i, ],
-        dst = destination,
-        osrm.profile = osrm.profile
+      tryCatch(
+        osrm::osrmRoute(
+          src = origins[i, ],
+          dst = destination,
+          osrm.profile = osrm.profile
+        ),
+        error = function(e) {
+          message(sprintf("Error querying route for origin %d: %s", i, e$message))
+          NULL
+        }
       )
     }
   ) |>
