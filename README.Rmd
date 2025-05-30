@@ -47,9 +47,9 @@ pak::pak("bicischools/bicischools")
 usethis::use_readme_rmd()
 # get deps
 getwd()
-pkg_deps = renv::dependencies("code/case-study-school.R")
+pkg_deps <- renv::dependencies("code/case-study-school.R")
 names(pkg_deps)
-pkg_deps = as.data.frame(pkg_deps)
+pkg_deps <- as.data.frame(pkg_deps)
 pkg_deps$Package
 lapply(pkg_deps$Package, usethis::use_package)
 # See if checks are happy now:

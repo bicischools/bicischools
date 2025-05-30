@@ -25,20 +25,19 @@
 
 #'
 sim_schools <- function(
-  origins,
-  destinations,
-  model,
-  ...,
-  balancing = c("origins", "destinations", "both"),
-  max_dist = Inf,
-  origins.id = names(origins)[1],
-  origins.size = names(origins)[2],
-  destinations.id = names(destinations)[1],
-  destinations.size = names(destinations)[2],
-  keep_cols = FALSE,
-  output_col = "modelled_trips",
-  max_iter = 25
-) {
+    origins,
+    destinations,
+    model,
+    ...,
+    balancing = c("origins", "destinations", "both"),
+    max_dist = Inf,
+    origins.id = names(origins)[1],
+    origins.size = names(origins)[2],
+    destinations.id = names(destinations)[1],
+    destinations.size = names(destinations)[2],
+    keep_cols = FALSE,
+    output_col = "modelled_trips",
+    max_iter = 25) {
   # Checks
 
   ## crs check
@@ -52,7 +51,7 @@ sim_schools <- function(
   }
 
   ## Arguments
-  balancing = match.arg(balancing, several.ok = F)
+  balancing <- match.arg(balancing, several.ok = F)
 
   if (!is.numeric(max_dist)) {
     stop("max_dist must be numerical")
@@ -66,14 +65,14 @@ sim_schools <- function(
 
   ## Calculating balancing factors
   if (balancing == "origins") {
-    o_bal_factor = 1
-    d_bal_factor = total_origins / total_destinations
+    o_bal_factor <- 1
+    d_bal_factor <- total_origins / total_destinations
   } else if (balancing == "destinations") {
-    o_bal_factor = total_destinations / total_origins
-    d_bal_factor = 1
+    o_bal_factor <- total_destinations / total_origins
+    d_bal_factor <- 1
   } else if (balancing == "both") {
-    o_bal_factor = total_avg / total_origins
-    d_bal_factor = total_avg / total_destinations
+    o_bal_factor <- total_avg / total_origins
+    d_bal_factor <- total_avg / total_destinations
   }
 
   ## Applying factors
