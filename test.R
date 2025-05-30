@@ -59,7 +59,7 @@ dest_only <- results |>
   select(D, destination_n_pupils) |>
   unique()
 
-results$modelled_trips |> sum(na.rm = T)
+results$modelled_trips |> sum(na.rm = TRUE)
 
 
 origin_only |> pull(origin_N_INDIVIDUOS_0_14) |> sum()
@@ -73,5 +73,6 @@ results$O |> unique() |> length()
 results$D |> unique() |> length()
 
 
-routes <- results |> filter(D == (results$D |> unique() |> head(1))) |> bici_routes()
+unique_destination <- results$D |> unique() |> head(1)
+routes <- results |> filter(D == unique_destination) |> bici_routes()
 
