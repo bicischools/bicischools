@@ -13,7 +13,7 @@
 #' \dontrun{
 #' bici_routes(od.data)
 #' }
-bici_routes <- function(
+bici_routes_osrm <- function(
     od.data,
     osrm.profile = "foot",
     origin.col = names(od.data)[1],
@@ -85,4 +85,76 @@ batch_osrmRoutes <- function(origins,
     }
   ) |>
     dplyr::bind_rows()
+}
+
+#' Extract bike/bici routes for origins and destinations
+#'
+#' @inheritParams bici_routes_osrm
+#'
+#' @returns An sf object with the routes to school
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' bici_routes(od.data)
+#' }
+bici_routes_cyclestreets <- function(
+    od.data,
+    plan = c("fastest", "quietest", "balanced"),
+    origin.col = names(od.data)[1],
+    destination.col = names(od.data)[2],
+    trips.col = names(od.data)[grep("trip", names(od.data))]) {
+  # Nest data by destination column to group OD pairs by destination
+  od.data |>
+    tidyr::nest(.by = dplyr::any_of(destination.col)) |>
+    # Map over each group to calculate routes
+    dplyr::mutate(route = purrr::map(
+      .x = .data$data,
+      function(.x) {
+        # Extract origins from OD data, keeping only relevant columns
+        origins <- .x |>
+          tidyr::drop_na(dplyr::any_of(trips.col)) |>
+          sf::st_cast("POINT", warn = FALSE) |>
+          dplyr::select(dplyr::any_of(c(origin.col, trips.col))) |>
+          dplyr::slice_head(n = 1, by = dplyr::any_of(origin.col))
+        
+        # Extract destination from OD data, ensuring it is a single point
+        destination <- .x[1, ] |>
+          sf::st_cast("POINT", warn = FALSE) |>
+          dplyr::mutate(id = "destination") |>
+          dplyr::select(dplyr::any_of("id")) |>
+          dplyr::slice_tail(n = 1, by = dplyr::any_of("id"))
+        
+        # Query routes using OSRM
+        routes <- batch_osrmRoutes(origins, destination, osrm.profile)
+        
+        routes
+      }
+    )) |>
+    dplyr::select(dplyr::any_of(c(destination.col, "route"))) |>
+    tidyr::unnest(cols = c("route")) |>
+    sf::st_as_sf() |>
+    dplyr::relocate(any_of(origin.col))
+}
+
+batch_CSRoutes <- function(origins,
+                           destination,
+                           plan) {
+  lapply(
+    1:nrow(origins),
+    function(i) {
+      tryCatch(
+        cyclestreets::journey2(
+          fromPlace = origins[i, ],
+          toPlace = destination,
+          plan = plan,
+          segments = TRUE
+          ),
+        error = function(e) {
+          message(sprintf("Error querying route for origin %d: %s", i, e$message))
+          NULL
+        }
+      )
+    }
+  ) 
 }

@@ -138,11 +138,16 @@ library(stplanr)
 plan = "quiet"
 plans = c("quiet", "fast")
 
+
+cyclestreets::batch_multi(od_5km,nrow_batch = 10,plans = "fastest")
+
+
 for (plan in plans) {
   location = paste0("../internal/routes-", plan, "-casestudy.Rds")
   routes_plan_location = location
   if (file.exists(routes_plan_location)) {
-    routes_plan = readRDS(routes_plan_location)
+    # routes_plan = readRDS(routes_plan_location)
+    FALSE
   } else {
     plan_name = paste0(plan, "est")
     routes_plan = route(
@@ -150,6 +155,7 @@ for (plan in plans) {
       route_fun = cyclestreets::journey,
       plan = plan_name
     )
+    browser()
     routes_plan = routes_plan |>
       group_by(route_number) |>
       mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |>
