@@ -90,6 +90,7 @@ batch_osrmRoutes <- function(origins,
 #' Extract bike/bici routes for origins and destinations
 #'
 #' @inheritParams bici_routes_osrm
+#' @param plan one of "quietest" (default), "fastest", or "balanced" for cycle streets
 #'
 #' @returns An sf object with the routes to school
 #' @export
@@ -100,10 +101,14 @@ batch_osrmRoutes <- function(origins,
 #' }
 bici_routes_cyclestreets <- function(
     od.data,
-    plan = c("fastest", "quietest", "balanced"),
+    plan = c("quietest","fastest", "balanced"),
     origin.col = names(od.data)[1],
     destination.col = names(od.data)[2],
     trips.col = names(od.data)[grep("trip", names(od.data))]) {
+  
+  # check argument
+  plan = match.arg(plan)
+  
   # Nest data by destination column to group OD pairs by destination
   od.data |>
     tidyr::nest(.by = dplyr::any_of(destination.col)) |>
@@ -126,9 +131,20 @@ bici_routes_cyclestreets <- function(
           dplyr::slice_tail(n = 1, by = dplyr::any_of("id"))
         
         # Query routes using OSRM
-        routes <- batch_osrmRoutes(origins, destination, osrm.profile)
+        routes <- batch_CSRoutes(origins, destination, plan = plan)
         
-        routes
+        # Renaming origin column
+        names(routes)[names(routes) == "id"] <- origin.col
+        
+        # Matching the classes for the original origin id
+        routes[[origin.col]] <- as(routes[[origin.col]],Class = class(origins[[origin.col]]))
+        
+        clean_routes <- origins |>
+          sf::st_drop_geometry() |>
+          dplyr::left_join(routes,by = origin.col)
+        
+        clean_routes
+        
       }
     )) |>
     dplyr::select(dplyr::any_of(c(destination.col, "route"))) |>
@@ -145,6 +161,7 @@ batch_CSRoutes <- function(origins,
     function(i) {
       tryCatch(
         cyclestreets::journey2(
+          id = origins[[i, 1]],
           fromPlace = origins[i, ],
           toPlace = destination,
           plan = plan,
@@ -156,5 +173,5 @@ batch_CSRoutes <- function(origins,
         }
       )
     }
-  ) 
+  ) |> dplyr::bind_rows() 
 }
