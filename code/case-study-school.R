@@ -138,6 +138,7 @@ library(stplanr)
 plan = "quiet"
 plans = c("quiet", "fast")
 
+
 for (plan in plans) {
   location = paste0("../internal/routes-", plan, "-casestudy.Rds")
   routes_plan_location = location
@@ -150,6 +151,7 @@ for (plan in plans) {
       route_fun = cyclestreets::journey,
       plan = plan_name
     )
+    browser()
     routes_plan = routes_plan |>
       group_by(route_number) |>
       mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |>
