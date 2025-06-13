@@ -56,3 +56,5 @@ get_models <- function(model) {
 check_logical <- function(value) {
   return(is.logical(value) & length(value) == 1)
 }
+
+utils::globalVariables(".data")
