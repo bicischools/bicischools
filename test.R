@@ -1,3 +1,6 @@
+library(tidyverse)
+library(sf)
+
 bgri = sf::read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
 bgri_4326 = sf::st_transform(bgri, 4326)
 bgri_4326 = sf::st_make_valid(bgri_4326)
@@ -56,7 +59,7 @@ dest_only <- results |>
   select(D, destination_n_pupils) |>
   unique()
 
-results$modelled_trips |> sum()
+results$modelled_trips |> sum(na.rm = TRUE)
 
 
 origin_only |> pull(origin_N_INDIVIDUOS_0_14) |> sum()
@@ -64,3 +67,18 @@ sum(home_zones$N_INDIVIDUOS_0_14)
 
 dest_only |> pull(destination_n_pupils) |> sum()
 sum(schools_c1$n_pupils)
+
+results$O |> unique() |> length()
+
+results$D |> unique() |> length()
+
+
+unique_destination <- results$D |> unique() |> head(1)
+
+
+routes <- results |> filter(D == unique_destination) |> bici_routes_osrm()
+
+routes_cyclestreets <- results |> filter(D == unique_destination) |> bici_routes_cyclestreets()
+
+
+results |> filter(D == unique_destination)

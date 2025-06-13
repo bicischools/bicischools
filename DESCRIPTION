@@ -5,19 +5,18 @@ Authors@R:
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
+URL: https://bicischools.github.io/bicischools/
+Depends: 
+    R (>= 4.1.0)
+Imports: 
+    cyclestreets,
+    dplyr,
+    osrm,
+    purrr,
+    rlang,
+    sf,
+    simodels,
+    tidyr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Imports: 
-    cyclestreets,
-    ggplot2,
-    matrixStats,
-    pct,
-    sf,
-    stplanr,
-    dplyr,
-    simodels,
-    rlang
-Remotes:
-   itsleeds/pct
-URL: https://bicischools.github.io/bicischools/
