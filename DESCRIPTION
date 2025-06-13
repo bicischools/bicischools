@@ -10,10 +10,10 @@ Depends:
     R (>= 4.1.0)
 Imports: 
     cyclestreets,
+    methods,
     dplyr,
     osrm,
     purrr,
-    rlang,
     sf,
     simodels,
     tidyr

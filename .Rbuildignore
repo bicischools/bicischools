@@ -7,3 +7,8 @@
 ^data$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^.*\.csv$
+^.*\.geojson$
+^.*\.qmd$
+^schools_files
+^data-raw$
