@@ -1,7 +1,7 @@
 library(tidyverse)
 library(sf)
 
-bgri = sf::read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
+bgri = sf::read_sf("../internal/BGRI21_170.gpkg")
 bgri_4326 = sf::st_transform(bgri, 4326)
 bgri_4326 = sf::st_make_valid(bgri_4326)
 
@@ -78,7 +78,53 @@ unique_destination <- results$D |> unique() |> head(1)
 
 routes <- results |> filter(D == unique_destination) |> bici_routes_osrm()
 
-routes_cyclestreets <- results |> filter(D == unique_destination) |> bici_routes_cyclestreets()
+results_unique <- results |>
+  filter(D == unique_destination)
+routes_cyclestreets <- results_unique |>
+  bici_routes_cyclestreets()
 
 
-results |> filter(D == unique_destination)
+nrow(results_unique)
+
+# Save the processed minimal datasets with usethis::use_data
+# Give the datasets more general and clear names
+od_data_almada <- results_unique |>
+  select(O, D, modelled_trips) |>
+  rename(
+    origin = O,
+    destination = D,
+    trips = modelled_trips
+  )
+
+schools_lisbon <- schools_c1 |>
+  mutate(
+    id = DGEEC_id,
+    n_pupils = n_pupils,
+    geometry,
+    .keep = "used" 
+  )
+
+origins_lisbon <- bgri_4326 |>
+  select(OBJECTID, N_INDIVIDUOS_0_14) |>
+  rename(
+    id = OBJECTID,
+    pupils = N_INDIVIDUOS_0_14
+  )
+
+library(tmap)
+tmap_mode("view")
+
+tmap::tm_shape(schools_lisbon) +
+  tmap::tm_dots(fill = "red", size = 1) +
+  tmap::tm_shape(origins_lisbon) +
+  tmap::tm_dots() +
+  tmap::tm_shape(od_data_almada) +
+  tmap::tm_lines(col = "grey")
+
+usethis::use_data(
+  od_data_almada,
+  schools_lisbon,
+  origins_lisbon,
+  overwrite = TRUE
+)
+list.files("data")

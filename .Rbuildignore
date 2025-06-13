@@ -4,7 +4,6 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
-^data$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^.*\.csv$
@@ -12,3 +11,4 @@
 ^.*\.qmd$
 ^schools_files
 ^data-raw$
+^data-old$
