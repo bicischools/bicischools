@@ -54,7 +54,7 @@ bici_routes_osrm <- function(
     dplyr::select(dplyr::any_of(c(destination.col, "route"))) |>
     tidyr::unnest(cols = c("route")) |>
     sf::st_as_sf() |>
-    dplyr::relocate(any_of(origin.col))
+    dplyr::relocate(dplyr::any_of(origin.col))
 }
 
 #' A function to query routes for several destinations to a single origin
@@ -137,7 +137,7 @@ bici_routes_cyclestreets <- function(
         names(routes)[names(routes) == "id"] <- origin.col
         
         # Matching the classes for the original origin id
-        routes[[origin.col]] <- as(routes[[origin.col]],Class = class(origins[[origin.col]]))
+        routes[[origin.col]] <- methods::as(routes[[origin.col]],Class = class(origins[[origin.col]]))
         
         clean_routes <- origins |>
           sf::st_drop_geometry() |>
@@ -150,7 +150,7 @@ bici_routes_cyclestreets <- function(
     dplyr::select(dplyr::any_of(c(destination.col, "route"))) |>
     tidyr::unnest(cols = c("route")) |>
     sf::st_as_sf() |>
-    dplyr::relocate(any_of(origin.col))
+    dplyr::relocate(dplyr::any_of(origin.col))
 }
 
 batch_CSRoutes <- function(origins,
