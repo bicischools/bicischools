@@ -30,3 +30,15 @@ NULL
 #' @format An sf object with X features and Y fields
 #' @source \url{http://somewhere.com/}
 NULL
+
+
+#' Routes to school a sample
+#'
+#' A dataset containing routes to a school in Lisbon.
+#'
+#' @examples
+#' routes_almada
+#' @name routes_almada
+#' @format An sf object with X features and Y fields
+#' @source \url{http://somewhere.com/}
+NULL

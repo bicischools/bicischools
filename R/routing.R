@@ -22,7 +22,10 @@ bici_routes_osrm <- function(
     destination.col = names(od.data)[2],
     trips.col = names(od.data)[grep("trip", names(od.data))]) {
   
-  od_clean <- prepare_od(od.data,trips.col = trips.col,distance.threshold = distance.threshold)
+  od_clean <- prepare_od(od.data,
+                         trips.col = trips.col,
+                         destination.col = destination.col,
+                         distance.threshold = distance.threshold)
   
   
   od_clean|>
@@ -114,7 +117,10 @@ bici_routes_cyclestreets <- function(
   # check argument
   plan = match.arg(plan)
   
-  od_clean <- prepare_od(od.data,trips.col = trips.col,distance.threshold = distance.threshold)
+  od_clean <- prepare_od(od.data,
+                         trips.col = trips.col,
+                         destination.col = destination.col,
+                         distance.threshold = distance.threshold)
   
   
   od_clean|>
@@ -207,7 +213,10 @@ bici_routes_stplanr <- function(
   plan = match.arg(plan)
   
   
-  od_clean <- prepare_od(od.data,trips.col = trips.col,distance.threshold = distance.threshold)
+  od_clean <- prepare_od(od.data,
+                         trips.col = trips.col,
+                         destination.col = destination.col,
+                         distance.threshold = distance.threshold)
   
   
   od_clean|>
@@ -228,7 +237,7 @@ bici_routes_stplanr <- function(
         
         
         routes |>
-          dplyr::mutate(route_hilliness = weighted.mean(.data$gradient_smooth, .data$distances))
+          dplyr::mutate(route_hilliness = stats::weighted.mean(.data$gradient_smooth, .data$distances))
       
       }
     )) |>
@@ -240,18 +249,18 @@ bici_routes_stplanr <- function(
 
 #' A function to get a nested OD data subset by school
 #'
-#' @param od_data 
-#' @param trips.col 
-#' @param distance.threshold 
+#' @param od_data original od dataset
+#' @inheritParams bici_routes_osrm
 #'
 #' @returns a nested tibble 
 #'
 prepare_od <- function(od_data,
+                       destination.col,
                        trips.col,
                        distance.threshold){
   
   # Filter desirelines with trips
-  od_data[!is.nan(od.data[[trips.col]]),] |>
+  od_data[!is.nan(od_data[[trips.col]]),] |>
     # filters Od paris within the distance threshold
     dplyr::filter(as.numeric(sf::st_length(.data$geometry))<=distance.threshold) |> 
     # Nest dataset by school

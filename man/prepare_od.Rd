@@ -4,14 +4,16 @@
 \alias{prepare_od}
 \title{A function to get a nested OD data subset by school}
 \usage{
-prepare_od(od_data, trips.col, distance.threshold)
+prepare_od(od_data, destination.col, trips.col, distance.threshold)
 }
 \arguments{
-\item{od_data}{}
+\item{od_data}{original od dataset}
 
-\item{trips.col}{}
+\item{destination.col}{string with name of the column with destination id}
 
-\item{distance.threshold}{}
+\item{trips.col}{string with name of the column with number of trips for each OD pair}
+
+\item{distance.threshold}{distance threshold in metres to create a subset of the routes}
 }
 \value{
 a nested tibble

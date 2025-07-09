@@ -83,10 +83,8 @@ routes <- results |>
 results_unique <- results |>
   filter(D == unique_destination)
 
-
-routes_cyclestreets <- results_unique |>
-  bici_routes_cyclestreets()
-
+routes_almada <- od_data_almada |>
+  bici_routes_stplanr(distance.threshold = 5e3)
 
 nrow(results_unique)
 
@@ -123,7 +121,11 @@ tmap::tm_shape(schools_lisbon) +
   tmap::tm_shape(origins_lisbon) +
   tmap::tm_dots() +
   tmap::tm_shape(od_data_almada) +
-  tmap::tm_lines(col = "grey")
+  tmap::tm_lines(col = "grey",col_alpha = 0.3)+
+  tmap::tm_shape(routes)+
+  tmap::tm_lines(col = "dodgerblue",col_alpha = 0.6)
+  
+  
 
 usethis::use_data(
   od_data_almada,
@@ -132,3 +134,5 @@ usethis::use_data(
   overwrite = TRUE
 )
 list.files("data")
+
+usethis::use_data(routes_almada)
