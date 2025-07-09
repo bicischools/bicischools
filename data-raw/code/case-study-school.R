@@ -7,7 +7,7 @@ tmap_mode("view")
 
 # Explore existing data for Escola Básica Adriano Correia de Oliveira
 
-schools_year = readRDS("data/SCHOOLS_year.Rds")
+schools_year = readRDS("data-raw//SCHOOLS_year.Rds")
 existing = schools_year |> filter(DGEEC_id == 1106908)
 # View(existing)
 sum(existing$STUDENTS)
@@ -116,7 +116,10 @@ zone_centroids = zone_centroids |>
 centroids_5km = zone_centroids |>
   filter(desire_line_length < 5000)
 
-tm_shape(centroids_5km) + tm_dots()
+tm_shape(centroids_5km) +
+  tm_dots()+
+  tm_shape(school)+
+  tm_dots("red")
 
 saveRDS(centroids_5km, "data/centroids_5km.Rds")
 centroids_5km = readRDS("data/centroids_5km.Rds")

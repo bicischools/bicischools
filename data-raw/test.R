@@ -84,7 +84,11 @@ results_unique <- results |>
   filter(D == unique_destination)
 
 routes_almada <- od_data_almada |>
-  bici_routes_stplanr(distance.threshold = 5e3)
+  bici_routes(distance.threshold = 5e3)
+
+
+
+
 
 nrow(results_unique)
 
@@ -131,8 +135,9 @@ usethis::use_data(
   od_data_almada,
   schools_lisbon,
   origins_lisbon,
+  routes_almada,
   overwrite = TRUE
 )
 list.files("data")
 
-usethis::use_data(routes_almada)
+
