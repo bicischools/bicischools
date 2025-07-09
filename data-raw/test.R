@@ -1,7 +1,7 @@
 library(tidyverse)
 library(sf)
 
-bgri = sf::read_sf("../internal/BGRI21_170.gpkg")
+bgri = sf::read_sf("../internal/BGRI21_170/BGRI21_170.gpkg")
 bgri_4326 = sf::st_transform(bgri, 4326)
 bgri_4326 = sf::st_make_valid(bgri_4326)
 
@@ -13,7 +13,7 @@ bgri_4326 = sf::st_make_valid(bgri_4326)
 # Restrict to Almada only
 bgri_4326 = bgri_4326 |>
   filter(DTMN21 == 1503)
-schools_c1 = readRDS("data/c1.Rds")
+schools_c1 = readRDS("data-raw/c1.Rds")
 schools_c1 = schools_c1 |>
   filter(MUNICIPIO == "Almada")
 
@@ -76,10 +76,14 @@ results$D |> unique() |> length()
 unique_destination <- results$D |> unique() |> head(1)
 
 
-routes <- results |> filter(D == unique_destination) |> bici_routes_osrm()
+routes <- results |>
+  filter(D == unique_destination) |>
+  bici_routes_osrm()
 
 results_unique <- results |>
   filter(D == unique_destination)
+
+
 routes_cyclestreets <- results_unique |>
   bici_routes_cyclestreets()
 

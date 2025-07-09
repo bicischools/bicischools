@@ -2,5 +2,6 @@
 
 export(bici_routes_cyclestreets)
 export(bici_routes_osrm)
+export(bici_routes_stplanr)
 export(get_models)
 export(sim_schools)
