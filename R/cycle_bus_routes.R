@@ -59,18 +59,21 @@ cycle_bus_routes = function(
   
   class(routes_subset[[attribute_trips_x_distance]]) = "numeric"
   
-  for (i in 1:nrow(routes_subset)) {
-    route_i = routes_subset[i, ]
-    route_i_buffer = stplanr::geo_buffer(route_i, dist = buffer)
-    rnet_in_route = rnet_subset[route_i_buffer, , op = sf::st_within]
-    routes_subset[i, attribute_trips_x_distance] = weighted.mean(
-      rnet_in_route[[attribute_trips]],
-      rnet_in_route$length
-    ) *
-      routes_subset[i, ]$length
-  }
-  routes_subset = routes_subset[
-    order(routes_subset[[attribute_trips_x_distance]]),
-  ]
+  route_buffer = stplanr::geo_buffer(routes_subset, dist = buffer)
+  
+  routes_within <- sf::st_contains(route_buffer,rnet_subset)
+  
+  routes_subset[, attribute_trips_x_distance] <- vapply(routes_within,function(x){
+    stats::weighted.mean(
+      rnet_subset[[attribute_trips]][x],
+      rnet_subset$length[x]
+    )  
+  },
+  FUN.VALUE = numeric(1))
+  
+  routes_subset[, attribute_trips_x_distance] <- routes_subset[[attribute_trips_x_distance]]*routes_subset$length
+  
+  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]]),  ]
+  
   routes_subset
 }
