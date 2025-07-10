@@ -73,22 +73,11 @@ results$O |> unique() |> length()
 results$D |> unique() |> length()
 
 
-unique_destination <- results$D |> unique() |> head(1)
-
-
-routes <- results |>
-  filter(D == unique_destination) |>
-  bici_routes_osrm()
+# unique_destination <- results$D |> unique() |> head(1)
+unique_destination <- 1503836
 
 results_unique <- results |>
   filter(D == unique_destination)
-
-routes_almada <- od_data_almada |>
-  bici_routes(distance.threshold = 5e3)
-
-
-
-
 
 nrow(results_unique)
 
@@ -117,6 +106,11 @@ origins_lisbon <- bgri_4326 |>
     pupils = N_INDIVIDUOS_0_14
   )
 
+routes_almada <- results_unique |>
+  bici_routes(distance.threshold = 5e3)
+
+
+
 library(tmap)
 tmap_mode("view")
 
@@ -126,7 +120,7 @@ tmap::tm_shape(schools_lisbon) +
   tmap::tm_dots() +
   tmap::tm_shape(od_data_almada) +
   tmap::tm_lines(col = "grey",col_alpha = 0.3)+
-  tmap::tm_shape(routes)+
+  tmap::tm_shape(routes_almada)+
   tmap::tm_lines(col = "dodgerblue",col_alpha = 0.6)
   
   
