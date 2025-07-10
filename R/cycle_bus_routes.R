@@ -73,7 +73,7 @@ cycle_bus_routes = function(
   
   routes_subset[, attribute_trips_x_distance] <- routes_subset[[attribute_trips_x_distance]]*routes_subset$length
   
-  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]]),  ]
+  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]],decreasing = FALSE),  ]
   
-  routes_subset
+  routes_subset[!is.nan(routes_subset[[attribute_trips_x_distance]]),]
 }

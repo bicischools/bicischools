@@ -109,8 +109,6 @@ origins_lisbon <- bgri_4326 |>
 routes_almada <- results_unique |>
   bici_routes(distance.threshold = 5e3)
 
-
-
 library(tmap)
 tmap_mode("view")
 
@@ -122,6 +120,14 @@ tmap::tm_shape(schools_lisbon) +
   tmap::tm_lines(col = "grey",col_alpha = 0.3)+
   tmap::tm_shape(routes_almada)+
   tmap::tm_lines(col = "dodgerblue",col_alpha = 0.6)
+
+
+
+
+bikebus_routes_almada <- routes_almada |> cycle_bus_routes()
+
+
+filtered_routes_almada <- bikebus_routes_almada |> filter_routes()
   
   
 
@@ -130,6 +136,8 @@ usethis::use_data(
   schools_lisbon,
   origins_lisbon,
   routes_almada,
+  bikebus_routes_almada,
+  filtered_routes_almada,
   overwrite = TRUE
 )
 list.files("data")
