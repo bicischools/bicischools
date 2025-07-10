@@ -5,6 +5,7 @@
 #' @param origin.col string with name of the column with origin id
 #' @param destination.col string with name of the column with destination id
 #' @param trips.col string with name of the column with number of trips for each OD pair
+#' @param distance.threshold distance threshold in metres to create a subset of the routes
 #'
 #' @returns An sf object with the routes to school
 #' @export
@@ -15,13 +16,19 @@
 #' }
 bici_routes_osrm <- function(
     od.data,
+    distance.threshold = Inf,
     osrm.profile = "foot",
     origin.col = names(od.data)[1],
     destination.col = names(od.data)[2],
     trips.col = names(od.data)[grep("trip", names(od.data))]) {
-  # Nest data by destination column to group OD pairs by destination
-  od.data |>
-    tidyr::nest(.by = dplyr::any_of(destination.col)) |>
+  
+  od_clean <- prepare_od(od.data,
+                         trips.col = trips.col,
+                         destination.col = destination.col,
+                         distance.threshold = distance.threshold)
+  
+  
+  od_clean|>
     # Map over each group to calculate routes
     dplyr::mutate(route = purrr::map(
       .x = .data$data,
@@ -87,7 +94,7 @@ batch_osrmRoutes <- function(origins,
     dplyr::bind_rows()
 }
 
-#' Extract bike/bici routes for origins and destinations
+#' Extract bike/bici routes for origins and destinations using CycleStreets
 #'
 #' @inheritParams bici_routes_osrm
 #' @param plan one of "quietest" (default), "fastest", or "balanced" for cycle streets
@@ -101,6 +108,7 @@ batch_osrmRoutes <- function(origins,
 #' }
 bici_routes_cyclestreets <- function(
     od.data,
+    distance.threshold = Inf,
     plan = c("quietest","fastest", "balanced"),
     origin.col = names(od.data)[1],
     destination.col = names(od.data)[2],
@@ -109,9 +117,13 @@ bici_routes_cyclestreets <- function(
   # check argument
   plan = match.arg(plan)
   
-  # Nest data by destination column to group OD pairs by destination
-  od.data |>
-    tidyr::nest(.by = dplyr::any_of(destination.col)) |>
+  od_clean <- prepare_od(od.data,
+                         trips.col = trips.col,
+                         destination.col = destination.col,
+                         distance.threshold = distance.threshold)
+  
+  
+  od_clean|>
     # Map over each group to calculate routes
     dplyr::mutate(route = purrr::map(
       .x = .data$data,
@@ -175,3 +187,93 @@ batch_CSRoutes <- function(origins,
     }
   ) |> dplyr::bind_rows() 
 }
+
+#' Extract bike/bici routes for origins and destinations using CycleStreets via stplanr
+#'
+#' @inheritParams bici_routes_osrm
+#' @param plan one of "quietest" (default), "fastest", or "balanced" for cycle streets
+#'
+#' @returns An sf object with the routes to school
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' bici_routes(od_data_almada)
+#' }
+bici_routes <- function(
+    od.data,
+    distance.threshold = Inf,
+    plan = c("quietest","fastest", "balanced"),
+    origin.col = names(od.data)[1],
+    destination.col = names(od.data)[2],
+    trips.col = names(od.data)[grep("trip", names(od.data))]) {
+  
+  # od.data <- od_data_almada
+  # check argument
+  plan = match.arg(plan)
+  
+  
+  od_clean <- prepare_od(od.data,
+                         trips.col = trips.col,
+                         destination.col = destination.col,
+                         distance.threshold = distance.threshold)
+  
+  
+  od_clean|>
+    # Map over each group to calculate routes
+    dplyr::mutate(route = purrr::map(
+      .x = .data$data,
+      function(.x) {
+       
+        # Query routes using stplanr
+        routes <- stplanr::route(
+          l = .x,
+          route_fun = cyclestreets::journey,
+          plan = plan
+        )
+        
+        # Renaming origin column
+        names(routes)[names(routes) == "origin"] <- origin.col
+        
+        
+        routes |>
+          dplyr::mutate(route_hilliness = stats::weighted.mean(.data$gradient_smooth, .data$distances))
+      
+      }
+    )) |>
+    dplyr::select(dplyr::any_of(c(destination.col, "route"))) |>
+    tidyr::unnest(cols = c("route")) |>
+    sf::st_as_sf() |>
+    dplyr::relocate(dplyr::any_of(origin.col)) |> 
+    dplyr::mutate(
+      pcycle_godutch = pct::uptake_pct_godutch_school2(
+        dplyr::case_when(
+          .data$length > 30000 ~ 30000,
+          TRUE ~ .data$length),
+        .data$route_hilliness
+      ),
+      bicycle_godutch = .data$pcycle_godutch * !!dplyr::sym(trips.col)
+    )
+}
+
+#' A function to get a nested OD data subset by school
+#'
+#' @param od_data original od dataset
+#' @inheritParams bici_routes_osrm
+#'
+#' @returns a nested tibble 
+#'
+prepare_od <- function(od_data,
+                       destination.col,
+                       trips.col,
+                       distance.threshold){
+  
+  # Filter desirelines with trips
+  od_data[!is.nan(od_data[[trips.col]]),] |>
+    # filters Od paris within the distance threshold
+    dplyr::filter(as.numeric(sf::st_length(.data$geometry))<=distance.threshold) |> 
+    # Nest dataset by school
+    tidyr::nest(.by = dplyr::any_of(destination.col))
+  
+}
+

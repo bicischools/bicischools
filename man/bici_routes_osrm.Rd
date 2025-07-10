@@ -6,6 +6,7 @@
 \usage{
 bici_routes_osrm(
   od.data,
+  distance.threshold = Inf,
   osrm.profile = "foot",
   origin.col = names(od.data)[1],
   destination.col = names(od.data)[2],
@@ -14,6 +15,8 @@ bici_routes_osrm(
 }
 \arguments{
 \item{od.data}{A sf object with OD data}
+
+\item{distance.threshold}{distance threshold in metres to create a subset of the routes}
 
 \item{osrm.profile}{for the osrmRoute function}
 
