@@ -42,3 +42,16 @@ NULL
 #' @format An sf object with X features and Y fields
 #' @source \url{http://somewhere.com/}
 NULL
+
+#' Bike bus routes in Almada a sample
+#'
+#' A dataset containing bike bus routes to a school in Lisbon.
+#'
+#' @examples
+#' bikebus_routes_almada
+#' @name bikebus_routes_almada
+#' @format An sf object with X features and Y fields
+#' @source \url{http://somewhere.com/}
+NULL
+
+

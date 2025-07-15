@@ -9,7 +9,6 @@
 #'   Must contain a geometry column and the specified attribute ranking column.
 #' @param attribute_trips Character string specifying which attribute to use for 
 #'   ranking routes. One of "bicycle_godutch", "quietness", or "gradient_smooth".
-#'   The function will look for a column named "{attribute_trips}_x_distance".
 #' @param buffer Numeric value specifying the minimum distance (in meters) between 
 #'   route start points. Routes with start points closer than this distance will 
 #'   be filtered out to avoid spatial overlap. Default is 300 meters.
