@@ -69,7 +69,7 @@ filter_routes = function(routes,
     }
     routes_subset = routes[selected_routes, ]
   }
-  routes_subset = routes_subset[order(-routes_subset[[attribute_trips_x_distance]]), ]
+  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]], decreasing = TRUE), ]
   routes_subset = routes_subset |>
     dplyr::slice_head(n = top_n)
   routes_subset
