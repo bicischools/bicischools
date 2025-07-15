@@ -53,18 +53,22 @@ filter_routes = function(routes,
   
   
   
-  for (i in 1:(nrow(routes_sorted) - 1)) {
-    p1 = routes_sorted_initial_point[i,]
-    better_routes = routes_sorted |> 
-      dplyr::slice_tail(n = nrow(routes_sorted) - i)
-    better_routes_union = sf::st_union(better_routes)
-    distance = units::drop_units(sf::st_distance(p1, better_routes_union))
-    if (distance > buffer) {
-      selected_routes = c(selected_routes, i)
+  if (nrow(routes_sorted) < 2) {
+    routes_subset = routes_sorted |>
+      dplyr::slice_head(n = top_n)
+  } else {
+    for (i in 1:(nrow(routes_sorted) - 1)) {
+      p1 = routes_sorted_initial_point[i,]
+      better_routes = routes_sorted |> 
+        dplyr::slice_tail(n = nrow(routes_sorted) - i)
+      better_routes_union = sf::st_union(better_routes)
+      distance = units::drop_units(sf::st_distance(p1, better_routes_union))
+      if (distance > buffer) {
+        selected_routes = c(selected_routes, i)
+      }
     }
-    
+    routes_subset = routes[selected_routes, ]
   }
-  routes_subset = routes[selected_routes, ]
   routes_subset = routes_subset[order(-routes_subset[[attribute_trips_x_distance]]), ]
   routes_subset = routes_subset |>
     dplyr::slice_head(n = top_n)
