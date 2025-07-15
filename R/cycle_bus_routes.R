@@ -1,18 +1,31 @@
-#' Title
+#' Create bicycle bus route network from individual routes
 #'
-#' @param routes 
-#' @param min_trips 
-#' @param attribute_trips 
-#' @param trips.col 
-#' @param buffer 
+#' Aggregates overlapping bicycle routes to identify high-demand corridors
+#' suitable for bike bus implementation. Routes are scored by distance-weighted
+#' cycling potential for prioritization.
 #'
-#' @returns a dataset with cycle bus routes
+#' @param routes An sf object with route geometries and cycling attributes.
+#' @param min_trips Minimum threshold for attribute filtering. Default: 0.
+#' @param attribute_trips Attribute for scoring: "bicycle_godutch", "quietness", or "gradient_smooth".
+#' @param trips.col Column name(s) for trip counts. Auto-detected by default.
+#' @param buffer Buffer distance (meters) for spatial operations. Default: 10.
+#'
+#' @return An sf object with optimized routes, sorted by distance-weighted scores.
+#'   Lower scores indicate higher priority routes.
+#'
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
-#' cycle_bus_routes(routes_almada)
+#' # Basic usage
+#' bike_network <- cycle_bus_routes(routes_almada)
+#' 
+#' # High-potential routes only
+#' priority_routes <- cycle_bus_routes(routes_almada, min_trips = 5, 
+#'                                   attribute_trips = "bicycle_godutch")
 #' }
+#'
+#' @seealso \code{\link{filter_routes}}
 cycle_bus_routes = function(
     routes,
     min_trips = 0,
@@ -46,7 +59,7 @@ cycle_bus_routes = function(
   routes_crop = sf::st_intersection(routes, rnet_buffer)
 
   routes_subset = routes_crop |>
-    dplyr::distinct(geometry)
+    dplyr::distinct(.data$geometry)
   
   routes_subset$id = seq.int(nrow(routes_subset))
   
@@ -73,7 +86,7 @@ cycle_bus_routes = function(
   
   routes_subset[, attribute_trips_x_distance] <- routes_subset[[attribute_trips_x_distance]]*routes_subset$length
   
-  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]]),  ]
+  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]],decreasing = FALSE),  ]
   
-  routes_subset
+  routes_subset[!is.nan(routes_subset[[attribute_trips_x_distance]]),]
 }

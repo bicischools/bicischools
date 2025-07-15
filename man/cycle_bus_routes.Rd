@@ -2,7 +2,7 @@
 % Please edit documentation in R/cycle_bus_routes.R
 \name{cycle_bus_routes}
 \alias{cycle_bus_routes}
-\title{Title}
+\title{Create bicycle bus route network from individual routes}
 \usage{
 cycle_bus_routes(
   routes,
@@ -13,24 +13,36 @@ cycle_bus_routes(
 )
 }
 \arguments{
-\item{routes}{}
+\item{routes}{An sf object with route geometries and cycling attributes.}
 
-\item{min_trips}{}
+\item{min_trips}{Minimum threshold for attribute filtering. Default: 0.}
 
-\item{attribute_trips}{}
+\item{attribute_trips}{Attribute for scoring: "bicycle_godutch", "quietness", or "gradient_smooth".}
 
-\item{trips.col}{}
+\item{trips.col}{Column name(s) for trip counts. Auto-detected by default.}
 
-\item{buffer}{}
+\item{buffer}{Buffer distance (meters) for spatial operations. Default: 10.}
 }
 \value{
-a dataset with cycle bus routes
+An sf object with optimized routes, sorted by distance-weighted scores.
+Lower scores indicate higher priority routes.
 }
 \description{
-Title
+Aggregates overlapping bicycle routes to identify high-demand corridors
+suitable for bike bus implementation. Routes are scored by distance-weighted
+cycling potential for prioritization.
 }
 \examples{
 \dontrun{
-cycle_bus_routes(routes_almada)
+# Basic usage
+bike_network <- cycle_bus_routes(routes_almada)
+
+# High-potential routes only
+priority_routes <- cycle_bus_routes(routes_almada, min_trips = 5, 
+                                  attribute_trips = "bicycle_godutch")
 }
+
+}
+\seealso{
+\code{\link{filter_routes}}
 }
