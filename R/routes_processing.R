@@ -76,42 +76,100 @@ filter_routes = function(routes,
 
 
 
+calc_route_stats <- function(rnet_plan,
+                             routes,
+                             attribute_trips = c("bicycle_godutch",
+                                                 "quietness",
+                                                 "gradient_smooth"),
+                             min_trips = 0)
+                             {
+  
+  attribute_trips <- match.arg(attribute_trips)
+                               
+  
+  group_by(route_number) |>
+    summarise(
+      n_students = mean(n_students),
+      length = mean(length),
+      desire_line_length = mean(desire_line_length)
+    )
+  
+  
+  rnet_subset = rnet_plan[rnet_plan[[attribute_trips]] > min_trips, ]
+  rnet_subset$length = sf::st_length(rnet_subset) |>
+    as.numeric()
+  rnet_union = sf::st_union(rnet_subset)
+  rnet_buffer = geo_buffer(rnet_union, dist = buffer)
+  routes_crop = sf::st_intersection(routes, rnet_buffer)
+  
+  ordered_routes = get(paste0("ordered_routes_", plan))
+  join = sf::st_join(routes_crop, ordered_routes, join = st_equals)
+  route_stats = join |>
+    mutate(
+      full_length = length.x,
+      bike_bus_length = length.y,
+      dist_to_bike_bus = length.x - length.y
+    ) |>
+    select(-length.x, -length.y)
+  assign(paste0("route_stats_", plan), route_stats)
+}
 
 
 
+
+#' Title
+#'
+#' @param routes_cents 
+#' @param top_routes 
+#' @param route_stats 
+#' @param centroids_5km 
+#'
+#' @returns
+#' @export
+#'
+#' @examples
 match_centroids = function(
     routes_cents,
     top_routes,
     route_stats,
-    centroids_5km
-) {
-  routes_cents = routes_cents |> filter(!id %in% top_routes$id) # removed the top routes from this object
-  routes_cents$pick = NA
-  z = nrow(routes_cents)
+    centroids,
+    id.col = names(routes_cents)[1],
+    dist_threshold = 15,
+    attribute_trips = c("bicycle_godutch",
+                        "quietness",
+                        "gradient_smooth")
+    ) {
+  
+  attribute_trips <- match.arg(attribute_trips)
+  
+  routes_cents_clean = routes_cents[!(routes_cents[[id.col]] %in% top_routes[[id.col]]),] # removed the top routes from this object
+  
+  routes_cents_clean$pick = 0
+  
+  routes_cents_initial_point <- routes_cents_clean |>
+    sf::st_cast( "POINT") |> 
+    dplyr::slice_head(n = 1,by = dplyr::all_of(id.col))
+  
+  dist_matrix <- routes_cents_clean |> 
+    sf::st_distance(top_routes)  
+    
+  index_closest <- apply(dist_matrix,1,which.min)
+  
+  mindist_closest <- apply(dist_matrix,1,min)
+  
+  index_closest[mindist_closest>dist_threshold] <- 0
+  
+  routes_cents_clean$pick <- index_closest
   
   
-  for (i in 1:z) {
-    route_i = routes_cents[i, ]
-    p = st_cast(route_i$geometry, "POINT")
-    p1 = p[1]
-    top_route_one = top_routes[1, ]
-    top_route_two = top_routes[2, ]
-    top_route_three = top_routes[3, ]
-    distance_one = units::drop_units(sf::st_distance(p1, top_route_one))
-    distance_two = units::drop_units(sf::st_distance(p1, top_route_two))
-    distance_three = units::drop_units(sf::st_distance(p1, top_route_three))
-    a = c(distance_one, distance_two, distance_three)
-    closest = which.min(a) # if two distances are tied, this picks the higher ranked route
-    dist = a[closest]
-    pick = if (dist <= (buffer + 5)) closest else 0 # have to allow distances a bit greater than buffer (10m) to account for rounding errors
-    routes_cents$pick[i] = pick
-  }
   
-  routes_both = routes_cents |>
+  routes_both = routes_cents_clean |>
     filter(pick != 0)
-  routes_both = rbind(routes_both, top_routes |> mutate(pick = row_number()))
+  routes_both = dplyr::bind_rows(routes_both,
+                      top_routes |>
+                        dplyr::mutate(pick = dplyr::row_number()))
   routes_both = routes_both |>
-    mutate(pick = as.character(pick))
+    dplyr::mutate(pick = as.character(pick))
   
   top_cents = inner_join(
     route_stats,
