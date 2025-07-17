@@ -2,9 +2,11 @@
 
 library(tidyverse)
 
+# Rough catchment for Manley Park Primary School
 zones = zonebuilder::zb_zone(
-    "Manley Park Primary School",
-    n_circles = 2
+    "Whalley Range Sure Start Centre",
+    n_circles = 2,
+    distance = 0.5
 )
 
 study_area = sf::st_union(zones)
@@ -22,5 +24,7 @@ osm_drive = osmactive::get_driving_network(osm_data)
 mapview::mapview(osm_drive, zcol = "maxspeed")
 
 
-usethis::use_data(example_school_mcr, overwrite = TRUE)
+# usethis::use_data(example_school_mcr, overwrite = TRUE)
+
+
 
