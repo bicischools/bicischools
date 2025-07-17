@@ -7,7 +7,7 @@ tmap_mode("view")
 
 # Explore existing data for Escola Básica Adriano Correia de Oliveira
 
-schools_year = readRDS("data-raw//SCHOOLS_year.Rds")
+schools_year = readRDS("data-raw/SCHOOLS_year.Rds")
 existing = schools_year |> filter(DGEEC_id == 1106908)
 # View(existing)
 sum(existing$STUDENTS)
@@ -99,7 +99,7 @@ zone_counts = home_assigned |>
   summarise(n_students = n()) |>
   ungroup()
 
-saveRDS(zone_counts, "data/zone_counts.Rds")
+saveRDS(zone_counts, "data-raw/zone_counts.Rds")
 
 # Then assign centroids for each zone to generate OD dataset at the zone-school level with counts
 zone_centroids = st_centroid(zone_counts)
@@ -121,8 +121,8 @@ tm_shape(centroids_5km) +
   tm_shape(school)+
   tm_dots("red")
 
-saveRDS(centroids_5km, "data/centroids_5km.Rds")
-centroids_5km = readRDS("data/centroids_5km.Rds")
+saveRDS(centroids_5km, "data-raw/centroids_5km.Rds")
+centroids_5km = readRDS("data-raw/centroids_5km.Rds")
 
 od_5km = centroids_5km |>
   mutate(d = school$geometry)
@@ -687,10 +687,10 @@ m8 = tm_shape(cents_fast |> rename(`Potential cyclists` = bicycle_godutch)) +
   tm_lines(lwd = 3, col = "Candidate route")
 
 # For panel figure in paper
-saveRDS(rnet_quiet, "../paper/Paper_JTG/route-data/rnet_quiet.Rds")
-saveRDS(to_map_quiet, "../paper/Paper_JTG/route-data/to_map_quiet.Rds")
-saveRDS(cents_quiet, "../paper/Paper_JTG/route-data/cents_quiet.Rds")
-saveRDS(school, "../paper/Paper_JTG/route-data/school.Rds")
+# saveRDS(rnet_quiet, "../paper/Paper_JTG/route-data/rnet_quiet.Rds")
+# saveRDS(to_map_quiet, "../paper/Paper_JTG/route-data/to_map_quiet.Rds")
+# saveRDS(cents_quiet, "../paper/Paper_JTG/route-data/cents_quiet.Rds")
+# saveRDS(school, "../paper/Paper_JTG/route-data/school.Rds")
 
 tmap_arrange(
   m2,

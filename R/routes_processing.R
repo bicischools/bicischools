@@ -76,42 +76,91 @@ filter_routes = function(routes,
 
 
 
-calc_route_stats <- function(rnet_plan,
-                             routes,
-                             attribute_trips = c("bicycle_godutch",
-                                                 "quietness",
-                                                 "gradient_smooth"),
-                             min_trips = 0)
-                             {
+#' Calculat stats for routes from centroids
+#'
+#' @inheritParams cycle_bus_routes
+
+#'
+#' @returns data.frame with stats for all routes using bike bus
+#' @export
+#'
+#' @examples
+#' #' \dontrun{
+#' # Basic usage
+#' route stats <- calc_route_stats(routes_almada)
+#' 
+#' }
+#' 
+calc_route_stats <- function(
+    routes,
+    min_trips = 0,
+    attribute_trips = c("bicycle_godutch",
+                        "quietness",
+                        "gradient_smooth"),
+    trips.col = names(routes)[grep("trip", names(routes))],
+    buffer = 10
+    ) {
+  
   
   attribute_trips <- match.arg(attribute_trips)
-                               
   
-  group_by(route_number) |>
-    summarise(
-      n_students = mean(n_students),
-      length = mean(length),
-      desire_line_length = mean(desire_line_length)
+  rnet <- routes |>
+    stplanr::overline(
+      attrib = c(
+        trips.col,
+        attribute_trips
+      ),
+      fun = sum
     )
   
-  
-  rnet_subset = rnet_plan[rnet_plan[[attribute_trips]] > min_trips, ]
+  rnet_subset = rnet[rnet[[attribute_trips]] > min_trips, ]
   rnet_subset$length = sf::st_length(rnet_subset) |>
     as.numeric()
+  
   rnet_union = sf::st_union(rnet_subset)
-  rnet_buffer = geo_buffer(rnet_union, dist = buffer)
+  
+  rnet_buffer = stplanr::geo_buffer(rnet_union, dist = buffer)
+  
   routes_crop = sf::st_intersection(routes, rnet_buffer)
   
-  ordered_routes = get(paste0("ordered_routes_", plan))
-  join = sf::st_join(routes_crop, ordered_routes, join = st_equals)
-  route_stats = join |>
-    mutate(
-      full_length = length.x,
-      bike_bus_length = length.y,
-      dist_to_bike_bus = length.x - length.y
-    ) |>
-    select(-length.x, -length.y)
-  assign(paste0("route_stats_", plan), route_stats)
+  routes_subset = routes_crop |>
+    dplyr::distinct(.data$geometry)
+  
+  routes_subset$id = seq.int(nrow(routes_subset))
+  
+  routes_subset$length = sf::st_length(routes_subset) |>
+    as.numeric()
+  
+  attribute_trips_x_distance = paste0(attribute_trips, "_x_distance")
+  
+  routes_subset[[attribute_trips_x_distance]] = NA
+  
+  class(routes_subset[[attribute_trips_x_distance]]) = "numeric"
+  
+  route_buffer = stplanr::geo_buffer(routes_subset, dist = buffer)
+  
+  routes_within <- sf::st_contains(route_buffer,rnet_subset)
+  
+  routes_subset[, attribute_trips_x_distance] <- vapply(routes_within,function(x){
+    stats::weighted.mean(
+      rnet_subset[[attribute_trips]][x],
+      rnet_subset$length[x]
+    )  
+  },
+  FUN.VALUE = numeric(1))
+  
+  routes_subset[, attribute_trips_x_distance] <- routes_subset[[attribute_trips_x_distance]]*routes_subset$length
+  
+  routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]],decreasing = FALSE),  ]
+  
+  routes_subset[!is.nan(routes_subset[[attribute_trips_x_distance]]),]
+  
+  sf::st_join(routes_crop, routes_subset, join = st_equals) |> 
+    dplyr::rename(full_length = length.x,
+                  bike_bus_length = length.y) |> 
+    dplyr::mutate(dist_to_bike_bus = full_length - bike_bus_length) |> 
+    dplyr::select(-dplyr::ends_with(".x"),-dplyr::ends_with(".y")) |> 
+    sf::st_drop_geometry()
 }
 
 
@@ -124,7 +173,7 @@ calc_route_stats <- function(rnet_plan,
 #' @param route_stats 
 #' @param centroids_5km 
 #'
-#' @returns
+#' @returns 
 #' @export
 #'
 #' @examples
