@@ -60,5 +60,11 @@ cycle_net = cycle_net |>
 
 # usethis::use_data(example_school_mcr, overwrite = TRUE)
 
+# Create random home locations within the zonebuilder area
+cycle_net_joined = sf::st_union(cycle_net)
+points = sf::st_sample(cycle_net_joined, size = 1000)
 
+tm_shape(cycle_net_joined) + tm_lines() +
+  tm_shape(points) + tm_dots(size = 1)
 
+# Generate routes to school from these points...
