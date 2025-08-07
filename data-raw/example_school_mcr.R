@@ -83,6 +83,19 @@ extract_students = function(school_name) {
 }
 n = extract_students(school_name)
 
+# Create desire lines
+points = st_as_sf(points)
+od = points |>
+  mutate(d = centre$geometry)
+od = od |> 
+  mutate(trips = nrow(points)/n)
 
+# Create routes
+library(stplanr)
+plan = "quietest"
 
-
+routes_plan = stplanr::route(
+  l = od,
+  route_fun = cyclestreets::journey,
+  plan = plan
+)
