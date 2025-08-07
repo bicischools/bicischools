@@ -1,0 +1,27 @@
+---
+format: gfm
+---
+
+
+```{r}
+library(sf)
+library(dplyr)
+
+origin <- stplanr::geo_code("Leeds railway station")
+destination <- stplanr::geo_code("University of Leeds")
+r1 = stplanr::route(origin, destination)
+plot(r1)
+r2 = stplanr::route(origin, destination, route_fun = stplanr::route_osrm)
+plot(r2)
+origin_sf = origin |>
+  sf::st_point() |>
+  sf::st_sfc(crs = 4326)
+destination_sf = destination |>
+  sf::st_point() |>
+  sf::st_sfc(crs = 4326)
+od = c(origin_sf, destination_sf)
+r3 = osrm::osrmTrip(od)
+plot(r3[[1]]$trip)
+```
+
+Conclusion: osrmpkg is fine for now.
