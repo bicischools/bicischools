@@ -85,6 +85,7 @@ n = extract_students(school_name)
 
 # Create desire lines
 points = st_as_sf(points)
+points = points[!grep("EMPTY", (points$x))]
 od = points |>
   mutate(d = centre$geometry)
 od = od |> 
