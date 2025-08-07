@@ -64,7 +64,25 @@ cycle_net = cycle_net |>
 cycle_net_joined = sf::st_union(cycle_net)
 points = sf::st_sample(cycle_net_joined, size = 1000)
 
-tm_shape(cycle_net_joined) + tm_lines() +
-  tm_shape(points) + tm_dots(size = 1)
+centre = sf::st_centroid(zones)[1,]
 
-# Generate routes to school from these points...
+tm_shape(cycle_net_joined) + tm_lines() +
+  tm_shape(points) + tm_dots(size = 1) +
+  tm_shape(centre) + tm_dots(size = 2)
+
+# Generate routes to school from these points
+# school_manc = osmextract::oe_get("College Road, Whalley Range, Manchester, M16 0AA")
+# number of pupils = 430
+
+school_name = "Manley Park Primary School"
+xlfile = "data-raw/edubasealldata20250724.xlsx"
+extract_students = function(school_name) {
+  x = readxl::read_xlsx(xlfile)
+  x = x |> filter(EstablishmentName == school_name)
+  number_of_pupils = x$NumberOfPupils
+}
+n = extract_students(school_name)
+
+
+
+
