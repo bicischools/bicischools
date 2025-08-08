@@ -142,3 +142,76 @@ routes_plan = routes_plan |>
   filter(length < 5000)
 assign(x = paste0("routes_", plan), value = routes_plan)
 saveRDS(routes_plan, paste0("./data/routes-", plan, "-manchester.Rds"))
+
+cycle_bus_routes(routes = routes_plan)
+
+routes_plan_all = get(paste0("routes_", plan, "_all"))
+route_summaries = routes_plan_all |>
+  group_by(route_number) |>
+  summarise(
+    trips = mean(trips),
+    length = mean(length),
+    desire_line_length = mean(desire_line_length)
+  )
+assign(paste0("route_summaries_all_", plan), route_summaries)
+
+# Rnet and PCT uptake
+library(pct)
+routes_plan = get(x = paste0("routes_", plan))
+routes_plan_pct = routes_plan |>
+  group_by(route_number) |>
+  mutate(
+    pcycle_godutch = pct::uptake_pct_godutch_school2(
+      case_when(length > 30000 ~ 30000, TRUE ~ length),
+      route_hilliness
+    ),
+    bicycle_godutch = pcycle_godutch * trips
+  )
+assign(paste0("routes_", plan, "_pct"), routes_plan_pct)
+rnet_plan_raw = routes_plan_pct |>
+  overline(
+    attrib = c(
+      "trips",
+      "bicycle_godutch",
+      "quietness",
+      "gradient_smooth"
+    ),
+    fun = list(sum = sum, mean = mean)
+  )
+rnet_plan = rnet_plan_raw |>
+  transmute(
+    trips = trips_sum,
+    bicycle_godutch = bicycle_godutch_sum,
+    quietness = round(quietness_mean),
+    gradient = round(gradient_smooth_mean * 100)
+  )
+assign(x = paste0("rnet_", plan), value = rnet_plan)
+
+tm_shape(rnet_quietest) +
+  tm_lines(
+    "bicycle_godutch",
+    palette = "viridis",
+    lwd = 2,
+    breaks = c(0, 5, 10, 100)
+  ) +
+  tm_shape(centroids_5km) +
+  tm_bubbles("trips") +
+  tm_shape(school) +
+  tm_bubbles(col = "green")
+
+quietness_breaks = c(0, 25, 50, 75, 100)
+pal = c('#882255', '#CC6677', '#44AA99', '#117733')
+
+routes_plan_pct = get(paste0("routes_", plan, "_pct"))
+route_summaries = routes_plan_pct |>
+  group_by(id, route_number, trips, bicycle_godutch, length) |>
+  summarise() |>
+  ungroup()
+assign(paste0("route_summaries_", plan), route_summaries)
+
+quiet_join = route_summaries_quietest |>
+  sf::st_drop_geometry() |>
+  select(id, route_number, bicycle_godutch)
+
+
+
