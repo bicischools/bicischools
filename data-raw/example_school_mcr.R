@@ -65,13 +65,17 @@ cycle_net = cycle_net |>
 cycle_net_joined = sf::st_union(cycle_net)
 points = sf::st_sample(cycle_net_joined, size = 1000)
 
+points = st_as_sf(points)
+points = points |> 
+  filter(!st_is_empty(points))
+
 centre = sf::st_centroid(zones)[1,]
 
 tm_shape(cycle_net_joined) + tm_lines() +
   tm_shape(points) + tm_dots(size = 1) +
   tm_shape(centre) + tm_dots(size = 2)
 
-# Generate routes to school from these points
+# Get number of students
 # school_manc = osmextract::oe_get("College Road, Whalley Range, Manchester, M16 0AA")
 # number of pupils = 430
 
@@ -85,16 +89,26 @@ extract_students = function(school_name) {
 n = extract_students(school_name)
 
 # Create desire lines
-points = st_as_sf(points)
-points = points[!grep("EMPTY", (points$geometry))]
-points = points |> 
-  filter(!st_is_empty(points))
-
 od = points |>
   mutate(d = centre$geometry)
-od = od |> 
-  mutate(trips = nrow(points)/n)
 
+od$geometry =
+  Map(st_union, od$x, od$d) |>
+  st_as_sfc(crs = st_crs(od)) |>
+  st_cast("LINESTRING")
+
+od = od |>
+  mutate(
+    desire_line_length = units::drop_units(st_length(geometry))
+  )
+od = od |> 
+  filter(desire_line_length < 5000)
+
+od = od |> 
+  mutate(trips = nrow(od)/n)
+
+
+# Generate routes to school from these points
 # Create routes
 library(stplanr)
 plan = "quietest"
