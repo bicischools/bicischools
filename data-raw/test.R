@@ -127,7 +127,7 @@ tmap::tm_shape(schools_lisbon) +
 bikebus_routes_almada <- routes_almada |> cycle_bus_routes()
 
 
-filtered_routes_almada <- bikebus_routes_almada |> filter_routes()
+top_routes_almada <- bikebus_routes_almada |> filter_routes()
   
   
 
@@ -137,7 +137,7 @@ usethis::use_data(
   origins_lisbon,
   routes_almada,
   bikebus_routes_almada,
-  filtered_routes_almada,
+  top_routes_almada,
   overwrite = TRUE
 )
 list.files("data")

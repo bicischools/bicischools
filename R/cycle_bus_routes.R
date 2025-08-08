@@ -89,4 +89,7 @@ cycle_bus_routes = function(
   routes_subset = routes_subset[order(routes_subset[[attribute_trips_x_distance]],decreasing = FALSE),  ]
   
   routes_subset[!is.nan(routes_subset[[attribute_trips_x_distance]]),]
+  
+  
+  
 }
