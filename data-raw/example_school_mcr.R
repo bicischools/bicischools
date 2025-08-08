@@ -107,6 +107,15 @@ od = od |>
 od = od |> 
   mutate(trips = nrow(od)/n)
 
+od_standard = od |> 
+  st_drop_geometry() |> 
+  mutate(id = row_number()) |> 
+  select(id, trips, desire_line_length, geometry)
+od_standard = st_as_sf(od_standard)
+
+# The desire lines still look strange!
+tm_shape(od_standard) + tm_lines()
+
 
 # Generate routes to school from these points
 # Create routes
