@@ -107,6 +107,7 @@ od = od |>
 od = od |> 
   mutate(trips = nrow(od)/n)
 
+# Fix the geometry
 od_standard = od |> 
   st_drop_geometry() |> 
   mutate(id = row_number()) |> 
@@ -123,7 +124,21 @@ library(stplanr)
 plan = "quietest"
 
 routes_plan = stplanr::route(
-  l = od,
+  l = od_standard,
   route_fun = cyclestreets::journey,
   plan = plan
 )
+tm_shape(routes_plan) + tm_lines("trips")
+
+routes_plan = routes_plan |>
+  group_by(route_number) |>
+  mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |>
+  ungroup()
+class(routes_plan$route_number) = "character"
+class(routes_plan$length) = "numeric"
+class(routes_plan$quietness) = "numeric"
+assign(paste0("routes_", plan, "_all"), routes_plan)
+routes_plan = routes_plan |>
+  filter(length < 5000)
+assign(x = paste0("routes_", plan), value = routes_plan)
+saveRDS(routes_plan, paste0("./data/routes-", plan, "-manchester.Rds"))
