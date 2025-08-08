@@ -3,6 +3,7 @@
 library(tidyverse)
 library(osmactive)
 library(tmap)
+library(sf)
 
 
 # Rough catchment for Manley Park Primary School
@@ -64,13 +65,17 @@ cycle_net = cycle_net |>
 cycle_net_joined = sf::st_union(cycle_net)
 points = sf::st_sample(cycle_net_joined, size = 1000)
 
+points = st_as_sf(points)
+points = points |> 
+  filter(!st_is_empty(points))
+
 centre = sf::st_centroid(zones)[1,]
 
 tm_shape(cycle_net_joined) + tm_lines() +
   tm_shape(points) + tm_dots(size = 1) +
   tm_shape(centre) + tm_dots(size = 2)
 
-# Generate routes to school from these points
+# Get number of students
 # school_manc = osmextract::oe_get("College Road, Whalley Range, Manchester, M16 0AA")
 # number of pupils = 430
 
@@ -84,19 +89,129 @@ extract_students = function(school_name) {
 n = extract_students(school_name)
 
 # Create desire lines
-points = st_as_sf(points)
-points = points[!grep("EMPTY", (points$x))]
 od = points |>
   mutate(d = centre$geometry)
-od = od |> 
-  mutate(trips = nrow(points)/n)
 
+od$geometry =
+  Map(st_union, od$x, od$d) |>
+  st_as_sfc(crs = st_crs(od)) |>
+  st_cast("LINESTRING")
+
+od = od |>
+  mutate(
+    desire_line_length = units::drop_units(st_length(geometry))
+  )
+od = od |> 
+  filter(desire_line_length < 5000)
+
+od = od |> 
+  mutate(trips = nrow(od)/n)
+
+# Fix the geometry
+od_standard = od |> 
+  st_drop_geometry() |> 
+  mutate(id = row_number()) |> 
+  select(id, trips, desire_line_length, geometry)
+od_standard = st_as_sf(od_standard)
+
+# The desire lines still look strange!
+tm_shape(od_standard) + tm_lines()
+
+
+# Generate routes to school from these points
 # Create routes
 library(stplanr)
 plan = "quietest"
 
 routes_plan = stplanr::route(
-  l = od,
+  l = od_standard,
   route_fun = cyclestreets::journey,
   plan = plan
 )
+tm_shape(routes_plan) + tm_lines("trips")
+
+routes_plan = routes_plan |>
+  group_by(route_number) |>
+  mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |>
+  ungroup()
+class(routes_plan$route_number) = "character"
+class(routes_plan$length) = "numeric"
+class(routes_plan$quietness) = "numeric"
+assign(paste0("routes_", plan, "_all"), routes_plan)
+routes_plan = routes_plan |>
+  filter(length < 5000)
+assign(x = paste0("routes_", plan), value = routes_plan)
+saveRDS(routes_plan, paste0("./data/routes-", plan, "-manchester.Rds"))
+
+
+routes_plan_all = get(paste0("routes_", plan, "_all"))
+route_summaries = routes_plan_all |>
+  group_by(route_number) |>
+  summarise(
+    trips = mean(trips),
+    length = mean(length),
+    desire_line_length = mean(desire_line_length)
+  )
+assign(paste0("route_summaries_all_", plan), route_summaries)
+
+# Rnet and PCT uptake
+library(pct)
+routes_plan = get(x = paste0("routes_", plan))
+routes_plan_pct = routes_plan |>
+  group_by(route_number) |>
+  mutate(
+    pcycle_godutch = pct::uptake_pct_godutch_school2(
+      case_when(length > 30000 ~ 30000, TRUE ~ length),
+      route_hilliness
+    ),
+    bicycle_godutch = pcycle_godutch * trips
+  )
+assign(paste0("routes_", plan, "_pct"), routes_plan_pct)
+rnet_plan_raw = routes_plan_pct |>
+  overline(
+    attrib = c(
+      "trips",
+      "bicycle_godutch",
+      "quietness",
+      "gradient_smooth"
+    ),
+    fun = list(sum = sum, mean = mean)
+  )
+rnet_plan = rnet_plan_raw |>
+  transmute(
+    trips = trips_sum,
+    bicycle_godutch = bicycle_godutch_sum,
+    quietness = round(quietness_mean),
+    gradient = round(gradient_smooth_mean * 100)
+  )
+assign(x = paste0("rnet_", plan), value = rnet_plan)
+
+tm_shape(rnet_quietest) +
+  tm_lines(
+    "bicycle_godutch",
+    palette = "viridis",
+    lwd = 2,
+    breaks = c(0, 5, 10, 100)
+  ) +
+  tm_shape(centroids_5km) +
+  tm_bubbles("trips") +
+  tm_shape(school) +
+  tm_bubbles(col = "green")
+
+quietness_breaks = c(0, 25, 50, 75, 100)
+pal = c('#882255', '#CC6677', '#44AA99', '#117733')
+
+routes_plan_pct = get(paste0("routes_", plan, "_pct"))
+route_summaries = routes_plan_pct |>
+  group_by(id, route_number, trips, bicycle_godutch, length) |>
+  summarise() |>
+  ungroup()
+assign(paste0("route_summaries_", plan), route_summaries)
+
+quiet_join = route_summaries_quietest |>
+  sf::st_drop_geometry() |>
+  select(id, route_number, bicycle_godutch)
+
+# First function by Juan 
+ordered_routes_quiet = cycle_bus_routes(routes = routes_plan_pct)
+
