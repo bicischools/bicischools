@@ -143,7 +143,6 @@ routes_plan = routes_plan |>
 assign(x = paste0("routes_", plan), value = routes_plan)
 saveRDS(routes_plan, paste0("./data/routes-", plan, "-manchester.Rds"))
 
-cycle_bus_routes(routes = routes_plan)
 
 routes_plan_all = get(paste0("routes_", plan, "_all"))
 route_summaries = routes_plan_all |>
@@ -213,5 +212,6 @@ quiet_join = route_summaries_quietest |>
   sf::st_drop_geometry() |>
   select(id, route_number, bicycle_godutch)
 
-
+# First function by Juan 
+ordered_routes_quiet = cycle_bus_routes(routes = routes_plan_pct)
 
