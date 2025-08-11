@@ -408,7 +408,7 @@ match_centroids = function(
     by = id.col
   )
   
-  # remove routes <500m or where less than half of the distance is on the bike bus
+  # remove routes shorter than dist_threshold or where less than half of the distance is on the bike bus
   top_cents = top_cents |>
     dplyr::filter(
       .data$full_length > dist_threshold,
