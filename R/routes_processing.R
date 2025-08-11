@@ -373,7 +373,8 @@ match_centroids = function(
   attribute_trips <- match.arg(attribute_trips)
   
   
-  routes_cents_clean = routes_cents[!(routes_cents[[id.col]] %in% top_routes[[id.col]]),] # removed the top routes from this object
+  # Remove top routes to avoid duplicate matching in subsequent processing
+  routes_cents_clean = routes_cents[!(routes_cents[[id.col]] %in% top_routes[[id.col]]),]
   
   routes_cents_clean$pick = 0
   
