@@ -245,15 +245,7 @@ bici_routes <- function(
     tidyr::unnest(cols = c("route")) |>
     sf::st_as_sf() |>
     dplyr::relocate(dplyr::any_of(origin.col)) |> 
-    dplyr::mutate(
-      pcycle_godutch = pct::uptake_pct_godutch_school2(
-        dplyr::case_when(
-          .data$length > 30000 ~ 30000,
-          TRUE ~ .data$length),
-        .data$route_hilliness
-      ),
-      bicycle_godutch = .data$pcycle_godutch * !!dplyr::sym(trips.col)
-    )
+    dplyr::filter(.data$length <= distance.threshold)
 }
 
 #' A function to get a nested OD data subset by school

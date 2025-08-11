@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{filter_routes}
 \alias{filter_routes}
-\title{Filter bicycle routes based on spatial proximity and attribute ranking}
+\title{Filter routes by spatial separation and ranking}
 \usage{
 filter_routes(
   routes,
@@ -12,35 +12,25 @@ filter_routes(
 )
 }
 \arguments{
-\item{routes}{An sf object containing route geometries with associated attributes.
-Must contain a geometry column and the specified attribute ranking column.}
+\item{routes}{An sf object with route geometries and attributes}
 
-\item{attribute_trips}{Character string specifying which attribute to use for
-ranking routes. One of "bicycle_godutch", "quietness", or "gradient_smooth".}
+\item{attribute_trips}{Attribute for ranking: "bicycle_godutch", "quietness", or "gradient_smooth"}
 
-\item{buffer}{Numeric value specifying the minimum distance (in meters) between
-route start points. Routes with start points closer than this distance will
-be filtered out to avoid spatial overlap. Default is 300 meters.}
+\item{buffer}{Minimum distance (meters) between route start points. Default: 300}
 
-\item{top_n}{Integer specifying the maximum number of routes to return after
-filtering and ranking. Default is 3.}
+\item{top_n}{Maximum number of routes to return. Default: 3}
 }
 \value{
-a dataset with the filtered routes
+An sf object with filtered and ranked routes
 }
 \description{
-This function filters a set of bicycle routes by selecting routes that are
-spatially separated (based on start point distances) and ranked by a specified
-attribute. It's designed to identify optimal bike bus routes that don't overlap
-at their origins and maximize cycling potential.
+Selects spatially separated routes based on start point distances and
+ranks them by specified attributes for bike bus implementation.
 }
 \examples{
 \dontrun{
-cycle_bus_routes <- cycle_bus_routes(routes_almada)
-filter_routes(cycle_bus_routes)
+rnet <- routes_network(routes_almada, "bicycle_godutch")
+bike_routes <- cycle_bus_routes(routes_almada, rnet)
+final_routes <- filter_routes(bike_routes, buffer = 500, top_n = 3)
 }
-
-}
-\seealso{
-\code{\link{cycle_bus_routes}} for creating route networks
 }

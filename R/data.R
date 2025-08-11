@@ -20,6 +20,17 @@ NULL
 #' @source \url{http://somewhere.com/}
 NULL
 
+#' Origin points in Lisbon
+#'
+#' A dataset containing origin points within Lisbon.
+#'
+#' @examples
+#' origins_almada
+#' @name origins_almada
+#' @format An sf object with X features and Y fields
+#' @source \url{http://somewhere.com/}
+NULL
+
 #' School locations in Lisbon
 #'
 #' A dataset containing school locations within Lisbon.
@@ -43,15 +54,5 @@ NULL
 #' @source \url{http://somewhere.com/}
 NULL
 
-#' Bike bus routes in Almada a sample
-#'
-#' A dataset containing bike bus routes to a school in Lisbon.
-#'
-#' @examples
-#' bikebus_routes_almada
-#' @name bikebus_routes_almada
-#' @format An sf object with X features and Y fields
-#' @source \url{http://somewhere.com/}
-NULL
 
 

@@ -28,6 +28,7 @@ schools_c1 = schools_c1 |>
 home_zones = bgri_4326 |>
   select(OBJECTID, N_INDIVIDUOS_0_14)
 
+# plot(home_zones$geom)
 
 results <- sim_schools(
   origins = home_zones,
@@ -106,38 +107,66 @@ origins_lisbon <- bgri_4326 |>
     pupils = N_INDIVIDUOS_0_14
   )
 
+plot(origins_lisbon$geom)
+
+
 routes_almada <- results_unique |>
   bici_routes(distance.threshold = 5e3)
 
 library(tmap)
 tmap_mode("view")
 
-tmap::tm_shape(schools_lisbon) +
+tmap::tm_shape(origins_lisbon) +
+  tmap::tm_borders() +
+  tmap::tm_shape(schools_lisbon) +
   tmap::tm_dots(fill = "red", size = 1) +
-  tmap::tm_shape(origins_lisbon) +
-  tmap::tm_dots() +
   tmap::tm_shape(od_data_almada) +
   tmap::tm_lines(col = "grey",col_alpha = 0.3)+
   tmap::tm_shape(routes_almada)+
   tmap::tm_lines(col = "dodgerblue",col_alpha = 0.6)
 
 
+data("routes_almada")
+data("origins_lisbon")
+
+origins_almada <- origins_lisbon |> filter(id %in% routes_almada$O)
 
 
-bikebus_routes_almada <- routes_almada |> cycle_bus_routes()
+routes_uptake <- routes_pct_uptake(routes_almada)
 
+rnet <- routes_network(routes_uptake)
 
-filtered_routes_almada <- bikebus_routes_almada |> filter_routes()
+routes_summaries <- summarise_routes(routes_uptake)
+
+ordered_routes <- cycle_bus_routes(routes_summaries,rnet = rnet,min_trips = 1)
+
+route_stats <- calc_stats(routes = routes_summaries,
+                          rnet_plan = rnet,
+                          ordered_routes = ordered_routes,
+                          min_trips = 1)
+
+top_routes <- filter_routes(ordered_routes)
+
+centroids <- match_centroids(routes_cents = ordered_routes,
+                             top_routes = top_routes,
+                             route_stats = route_stats,
+                             origins = origins_almada,
+                             attribute_trips = "bicycle_godutch")
   
-  
+
+
+
+
+
+
+
 
 usethis::use_data(
   od_data_almada,
   schools_lisbon,
   origins_lisbon,
+  origins_almada,
   routes_almada,
-  bikebus_routes_almada,
-  filtered_routes_almada,
   overwrite = TRUE
 )
 list.files("data")
