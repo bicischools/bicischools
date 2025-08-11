@@ -27,7 +27,7 @@ routes_pct_uptake <- function(routes,
         dplyr::case_when(
           !!dplyr::sym(length.col) > max.length ~ max.length,
           TRUE ~ !!dplyr::sym(length.col)),
-        .data$route_hilliness
+        !!dplyr::sym(hilliness.col)
       ),
       bicycle_godutch = .data$pcycle_godutch * !!dplyr::sym(trips.col)
     )
