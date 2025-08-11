@@ -122,13 +122,31 @@ tmap::tm_shape(schools_lisbon) +
   tmap::tm_lines(col = "dodgerblue",col_alpha = 0.6)
 
 
+data("routes_almada")
+data("origins_lisbon")
+
+origins_almada <- origins_lisbon |> filter(id %in% routes_almada$O)
 
 
-bikebus_routes_almada <- routes_almada |> cycle_bus_routes()
+routes_uptake <- routes_pct_uptake(routes_almada)
 
+rnet <- routes_network(routes_uptake)
 
-top_routes_almada <- bikebus_routes_almada |> filter_routes()
-  
+routes_summaries <- summarise_routes(routes_almada)
+
+ordered_routes <- cycle_bus_routes2(routes_summaries,rnet = rnet,min_trips = 1)
+
+route_stats <- calc_stats(routes = routes_summaries,
+                          rnet_plan = rnet,
+                          ordered_routes = ordered_routes,
+                          min_trips = 1)
+
+top_routes <- filter_routes2(ordered_routes)
+
+centroids <- match_centroids(routes_cents = ordered_routes,
+                             top_routes = top_routes,
+                             route_stats = route_stats,
+                             origins = origins_almada)
   
 
 usethis::use_data(

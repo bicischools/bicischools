@@ -6,6 +6,7 @@
 \usage{
 calc_route_stats(
   routes,
+  top_routes,
   min_trips = 0,
   attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth"),
   trips.col = names(routes)[grep("trip", names(routes))],
