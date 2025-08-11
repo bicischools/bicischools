@@ -244,7 +244,8 @@ bici_routes <- function(
     dplyr::select(dplyr::any_of(c(destination.col, "route"))) |>
     tidyr::unnest(cols = c("route")) |>
     sf::st_as_sf() |>
-    dplyr::relocate(dplyr::any_of(origin.col))
+    dplyr::relocate(dplyr::any_of(origin.col)) |> 
+    dplyr::filter(.data$length <= distance.threshold)
 }
 
 #' A function to get a nested OD data subset by school

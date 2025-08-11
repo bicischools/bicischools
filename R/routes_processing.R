@@ -1,3 +1,21 @@
+#' Calculate cycling uptake using PCT Go Dutch scenario
+#'
+#' Estimates cycling potential based on route distance and hilliness using
+#' the Propensity to Cycle Tool (PCT) Go Dutch model for school trips.
+#'
+#' @param routes An sf object with route data
+#' @param trips.col Column name for trip counts. Auto-detected by default.
+#' @param length.col Column name for route length. Default: "length"
+#' @param max.length Maximum route length for uptake calculation. Default: 30000m
+#' @param hilliness.col Column name for route hilliness. Default: "route_hilliness"
+#'
+#' @return An sf object with added columns: pcycle_godutch (proportion) and bicycle_godutch (absolute numbers)
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' routes_with_uptake <- routes_pct_uptake(routes_almada)
+#' }
 routes_pct_uptake <- function(routes,
                               trips.col = names(routes)[grep("trip", names(routes))],
                               length.col = "length",
@@ -16,6 +34,22 @@ routes_pct_uptake <- function(routes,
 }
 
 
+#' Create route network by overlaying individual routes
+#'
+#' Aggregates overlapping routes using stplanr::overline to create a network.
+#' Sums bicycle_godutch values, averages other attributes.
+#'
+#' @param routes An sf object with route geometries
+#' @param attribute_trips Attribute to process: "bicycle_godutch", "quietness", or "gradient_smooth"
+#' @param trips.col Column name(s) for trip counts. Auto-detected by default.
+#'
+#' @return An sf object with aggregated route network
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' network <- routes_network(routes_almada, "bicycle_godutch")
+#' }
 routes_network <- function(routes,
                            attribute_trips = c("bicycle_godutch",
                                                "quietness",
@@ -56,6 +90,26 @@ routes_network <- function(routes,
   }
 
 
+#' Summarise routes by grouping variables
+#'
+#' Groups routes by specified columns and creates route summaries,
+#' typically used for aggregating routes by origin-destination pairs.
+#'
+#' @param routes An sf object with route data
+#' @param id_route.col Column name for route ID. Default: "route_number"
+#' @param origin.col Column name for origin ID. Default: "O"
+#' @param destination.col Column name for destination ID. Default: "D"
+#' @param trips.col Column name for trip counts. Auto-detected by default.
+#' @param attribute_trips Attribute to include: "bicycle_godutch", "quietness", or "gradient_smooth"
+#' @param length.col Column name for route length. Default: "length"
+#'
+#' @return An sf object with summarized routes grouped by specified variables
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' route_summaries <- summarise_routes(routes_almada)
+#' }
 summarise_routes <- function(routes,
                              id_route.col = "route_number",
                              origin.col = "O",
@@ -83,6 +137,26 @@ summarise_routes <- function(routes,
 }
 
 
+#' Create bicycle bus routes from route network
+#'
+#' Identifies optimal bike bus routes by filtering high-demand network segments
+#' and calculating distance-weighted scores for route prioritization.
+#'
+#' @param routes An sf object with individual route geometries
+#' @param rnet Route network created by routes_network()
+#' @param min_trips Minimum threshold for attribute filtering. Default: 0
+#' @param attribute_trips Attribute for scoring: "bicycle_godutch", "quietness", or "gradient_smooth"
+#' @param trips.col Column name(s) for trip counts. Auto-detected by default.
+#' @param buffer Buffer distance (meters) for spatial operations. Default: 10
+#'
+#' @return An sf object with bike bus routes sorted by distance-weighted scores
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' rnet <- routes_network(routes_almada, "bicycle_godutch")
+#' bike_routes <- cycle_bus_routes(routes_almada, rnet, min_trips = 3)
+#' }
 cycle_bus_routes <- function(routes,
                               rnet,
                               min_trips = 0,
@@ -138,6 +212,27 @@ cycle_bus_routes <- function(routes,
   
 }
 
+#' Calculate route statistics for bike bus planning
+#'
+#' Computes statistics for routes intersecting with bike bus corridors,
+#' including full route length, bike bus segment length, and distance metrics.
+#'
+#' @param routes An sf object with individual routes
+#' @param rnet_plan Route network from routes_network()
+#' @param ordered_routes Prioritized routes from cycle_bus_routes()
+#' @param attribute_trips Attribute for filtering: "bicycle_godutch", "quietness", or "gradient_smooth"
+#' @param min_trips Minimum threshold for network filtering. Default: 0
+#' @param buffer Buffer distance (meters) for spatial operations. Default: 10
+#'
+#' @return An sf object with route statistics including full_length, bike_bus_length, dist_to_bike_bus
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' rnet <- routes_network(routes_almada, "bicycle_godutch")
+#' bike_routes <- cycle_bus_routes(routes_almada, rnet)
+#' stats <- calc_stats(routes_almada, rnet, bike_routes)
+#' }
 calc_stats <- function(routes,
                        rnet_plan,
                        ordered_routes,
@@ -158,20 +253,39 @@ calc_stats <- function(routes,
   routes_crop = sf::st_intersection(routes, rnet_buffer)
   
   
-  join = sf::st_join(routes_crop, ordered_routes, join = st_equals)
+  join = sf::st_join(routes_crop, ordered_routes, join = sf::st_equals)
   
   route_stats = join |>
-    mutate(
-      full_length = length.x,
-      bike_bus_length = length.y,
-      dist_to_bike_bus = length.x - length.y
+    dplyr::mutate(
+      full_length = .data$length.x,
+      bike_bus_length = .data$length.y,
+      dist_to_bike_bus = .data$length.x - .data$length.y
     ) |>
-    select(-length.x, -length.y)
+    dplyr::select(-dplyr::any_of(c("length.x","length.y")))
   
   route_stats
 }
   
 
+#' Filter routes by spatial separation and ranking
+#'
+#' Selects spatially separated routes based on start point distances and
+#' ranks them by specified attributes for bike bus implementation.
+#'
+#' @param routes An sf object with route geometries and attributes
+#' @param attribute_trips Attribute for ranking: "bicycle_godutch", "quietness", or "gradient_smooth"
+#' @param buffer Minimum distance (meters) between route start points. Default: 300
+#' @param top_n Maximum number of routes to return. Default: 3
+#'
+#' @return An sf object with filtered and ranked routes
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' rnet <- routes_network(routes_almada, "bicycle_godutch")
+#' bike_routes <- cycle_bus_routes(routes_almada, rnet)
+#' final_routes <- filter_routes(bike_routes, buffer = 500, top_n = 3)
+#' }
 filter_routes <- function(routes,
                            attribute_trips = c("bicycle_godutch",
                                                "quietness",
@@ -216,6 +330,33 @@ filter_routes <- function(routes,
   routes_subset
 }
 
+#' Match origin centroids to bike bus routes
+#'
+#' Assigns origin points to their nearest bike bus routes within a distance
+#' threshold, creating a mapping between residential areas and route services.
+#'
+#' @param routes_cents An sf object with candidate routes
+#' @param top_routes An sf object with selected top routes
+#' @param route_stats Route statistics from calc_stats()
+#' @param origins An sf object with origin points/zones
+#' @param origin.id Column name for origin ID in origins data. Auto-detected by default.
+#' @param oringin_route.id Column name for origin ID in route data. Default: "O"
+#' @param id.col Column name for route ID. Default: "id"
+#' @param dist_threshold Maximum distance (meters) for matching. Default: 500
+#' @param attribute_trips Attribute for processing: "bicycle_godutch", "quietness", or "gradient_smooth"
+#'
+#' @return An sf object with origins matched to their assigned bike bus routes
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Complete workflow
+#' rnet <- routes_network(routes_almada, "bicycle_godutch")
+#' bike_routes <- cycle_bus_routes(routes_almada, rnet)
+#' top_routes <- filter_routes(bike_routes, top_n = 3)
+#' stats <- calc_stats(routes_almada, rnet, bike_routes)
+#' matched <- match_centroids(bike_routes, top_routes, stats, origins_lisbon)
+#' }
 match_centroids = function(
     routes_cents,
     top_routes,
@@ -223,7 +364,7 @@ match_centroids = function(
     origins,
     origin.id = names(origins)[1],
     oringin_route.id = "O",
-    id.col = names(routes_cents)[1],
+    id.col = "id",
     dist_threshold = 500,
     attribute_trips = c("bicycle_godutch",
                         "quietness",
@@ -252,15 +393,15 @@ match_centroids = function(
   routes_cents_clean$pick <- index_closest
   
   routes_both = routes_cents_clean |>
-    filter(pick != 0)
+    dplyr::filter(.data$pick != 0)
   
   routes_both = dplyr::bind_rows(routes_both,
                                  top_routes |>
                                    dplyr::mutate(pick = dplyr::row_number()))
   routes_both = routes_both |>
-    dplyr::mutate(pick = as.character(pick))
+    dplyr::mutate(pick = as.character(.data$pick))
   
-  top_cents = inner_join(
+  top_cents = dplyr::inner_join(
     route_stats,
     routes_both |> sf::st_drop_geometry(),
     by = id.col
@@ -268,16 +409,19 @@ match_centroids = function(
   
   # remove routes <500m or where less than half of the distance is on the bike bus
   top_cents = top_cents |>
-    filter(
-      full_length > dist_threshold,
-      bike_bus_length > dist_to_bike_bus
-    )
+    dplyr::filter(
+      .data$full_length > dist_threshold,
+      .data$bike_bus_length > .data$dist_to_bike_bus
+    ) |> 
+    dplyr::select(-dplyr::any_of(origin.id))
+  
+  
   
   key_vector = oringin_route.id
   names(key_vector) <- origin.id
   
-  cents = inner_join(
-    centroids,
+  cents = dplyr::inner_join(
+    origins,
     top_cents |> sf::st_drop_geometry(),
     by = key_vector
   )

@@ -8,9 +8,11 @@ match_centroids(
   routes_cents,
   top_routes,
   route_stats,
-  centroids,
-  id.col = names(routes_cents)[1],
-  dist_threshold = 15,
+  origins,
+  origin.id = names(origins)[1],
+  oringin_route.id = "O",
+  id.col = "id",
+  dist_threshold = 500,
   attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth")
 )
 }
@@ -21,7 +23,17 @@ match_centroids(
 
 \item{route_stats}{}
 
-\item{centroids_5km}{}
+\item{origins}{}
+
+\item{origin.id}{}
+
+\item{oringin_route.id}{}
+
+\item{id.col}{}
+
+\item{dist_threshold}{}
+
+\item{attribute_trips}{}
 }
 \description{
 Title
