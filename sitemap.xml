@@ -9,17 +9,22 @@
 <url><loc>https://bicischools.github.io/bicischools/reference/bici_routes_cyclestreets.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/bici_routes_osrm.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/bicischools-package.html</loc></url>
-<url><loc>https://bicischools.github.io/bicischools/reference/bikebus_routes_almada.html</loc></url>
+<url><loc>https://bicischools.github.io/bicischools/reference/calc_stats.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/check_same_crs.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/cycle_bus_routes.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/filter_routes.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/get_models.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/index.html</loc></url>
+<url><loc>https://bicischools.github.io/bicischools/reference/match_centroids.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/od_data_almada.html</loc></url>
+<url><loc>https://bicischools.github.io/bicischools/reference/origins_almada.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/origins_lisbon.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/prepare_od.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/routes_almada.html</loc></url>
+<url><loc>https://bicischools.github.io/bicischools/reference/routes_network.html</loc></url>
+<url><loc>https://bicischools.github.io/bicischools/reference/routes_pct_uptake.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/schools_lisbon.html</loc></url>
 <url><loc>https://bicischools.github.io/bicischools/reference/sim_schools.html</loc></url>
+<url><loc>https://bicischools.github.io/bicischools/reference/summarise_routes.html</loc></url>
 </urlset>
 
