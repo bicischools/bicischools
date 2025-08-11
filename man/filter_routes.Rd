@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{filter_routes}
 \alias{filter_routes}
-\title{Title}
+\title{Filter routes by spatial separation and ranking}
 \usage{
 filter_routes(
   routes,
@@ -12,14 +12,25 @@ filter_routes(
 )
 }
 \arguments{
-\item{routes}{}
+\item{routes}{An sf object with route geometries and attributes}
 
-\item{attribute_trips}{}
+\item{attribute_trips}{Attribute for ranking: "bicycle_godutch", "quietness", or "gradient_smooth"}
 
-\item{buffer}{}
+\item{buffer}{Minimum distance (meters) between route start points. Default: 300}
 
-\item{top_n}{}
+\item{top_n}{Maximum number of routes to return. Default: 3}
+}
+\value{
+An sf object with filtered and ranked routes
 }
 \description{
-Title
+Selects spatially separated routes based on start point distances and
+ranks them by specified attributes for bike bus implementation.
+}
+\examples{
+\dontrun{
+rnet <- routes_network(routes_almada, "bicycle_godutch")
+bike_routes <- cycle_bus_routes(routes_almada, rnet)
+final_routes <- filter_routes(bike_routes, buffer = 500, top_n = 3)
+}
 }

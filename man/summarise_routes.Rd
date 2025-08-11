@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{summarise_routes}
 \alias{summarise_routes}
-\title{Title}
+\title{Summarise routes by grouping variables}
 \usage{
 summarise_routes(
   routes,
@@ -15,20 +15,29 @@ summarise_routes(
 )
 }
 \arguments{
-\item{routes}{}
+\item{routes}{An sf object with route data}
 
-\item{id_route.col}{}
+\item{id_route.col}{Column name for route ID. Default: "route_number"}
 
-\item{origin.col}{}
+\item{origin.col}{Column name for origin ID. Default: "O"}
 
-\item{destination.col}{}
+\item{destination.col}{Column name for destination ID. Default: "D"}
 
-\item{trips.col}{}
+\item{trips.col}{Column name for trip counts. Auto-detected by default.}
 
-\item{attribute_trips}{}
+\item{attribute_trips}{Attribute to include: "bicycle_godutch", "quietness", or "gradient_smooth"}
 
-\item{length.col}{}
+\item{length.col}{Column name for route length. Default: "length"}
+}
+\value{
+An sf object with summarized routes grouped by specified variables
 }
 \description{
-Title
+Groups routes by specified columns and creates route summaries,
+typically used for aggregating routes by origin-destination pairs.
+}
+\examples{
+\dontrun{
+route_summaries <- summarise_routes(routes_almada)
+}
 }

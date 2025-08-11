@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{routes_pct_uptake}
 \alias{routes_pct_uptake}
-\title{Title}
+\title{Calculate cycling uptake using PCT Go Dutch scenario}
 \usage{
 routes_pct_uptake(
   routes,
@@ -13,16 +13,25 @@ routes_pct_uptake(
 )
 }
 \arguments{
-\item{routes}{}
+\item{routes}{An sf object with route data}
 
-\item{trips.col}{}
+\item{trips.col}{Column name for trip counts. Auto-detected by default.}
 
-\item{length.col}{}
+\item{length.col}{Column name for route length. Default: "length"}
 
-\item{max.length}{}
+\item{max.length}{Maximum route length for uptake calculation. Default: 30000m}
 
-\item{hilliness.col}{}
+\item{hilliness.col}{Column name for route hilliness. Default: "route_hilliness"}
+}
+\value{
+An sf object with added columns: pcycle_godutch (proportion) and bicycle_godutch (absolute numbers)
 }
 \description{
-Title
+Estimates cycling potential based on route distance and hilliness using
+the Propensity to Cycle Tool (PCT) Go Dutch model for school trips.
+}
+\examples{
+\dontrun{
+routes_with_uptake <- routes_pct_uptake(routes_almada)
+}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{cycle_bus_routes}
 \alias{cycle_bus_routes}
-\title{Title}
+\title{Create bicycle bus routes from route network}
 \usage{
 cycle_bus_routes(
   routes,
@@ -14,18 +14,28 @@ cycle_bus_routes(
 )
 }
 \arguments{
-\item{routes}{}
+\item{routes}{An sf object with individual route geometries}
 
-\item{rnet}{}
+\item{rnet}{Route network created by routes_network()}
 
-\item{min_trips}{}
+\item{min_trips}{Minimum threshold for attribute filtering. Default: 0}
 
-\item{attribute_trips}{}
+\item{attribute_trips}{Attribute for scoring: "bicycle_godutch", "quietness", or "gradient_smooth"}
 
-\item{trips.col}{}
+\item{trips.col}{Column name(s) for trip counts. Auto-detected by default.}
 
-\item{buffer}{}
+\item{buffer}{Buffer distance (meters) for spatial operations. Default: 10}
+}
+\value{
+An sf object with bike bus routes sorted by distance-weighted scores
 }
 \description{
-Title
+Identifies optimal bike bus routes by filtering high-demand network segments
+and calculating distance-weighted scores for route prioritization.
+}
+\examples{
+\dontrun{
+rnet <- routes_network(routes_almada, "bicycle_godutch")
+bike_routes <- cycle_bus_routes(routes_almada, rnet, min_trips = 3)
+}
 }

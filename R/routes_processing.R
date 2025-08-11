@@ -340,7 +340,7 @@ filter_routes <- function(routes,
 #' @param route_stats Route statistics from calc_stats()
 #' @param origins An sf object with origin points/zones
 #' @param origin.id Column name for origin ID in origins data. Auto-detected by default.
-#' @param oringin_route.id Column name for origin ID in route data. Default: "O"
+#' @param origin_route.id Column name for origin ID in route data. Default: "O"
 #' @param id.col Column name for route ID. Default: "id"
 #' @param dist_threshold Maximum distance (meters) for matching. Default: 500
 #' @param attribute_trips Attribute for processing: "bicycle_godutch", "quietness", or "gradient_smooth"
@@ -363,7 +363,7 @@ match_centroids = function(
     route_stats,
     origins,
     origin.id = names(origins)[1],
-    oringin_route.id = "O",
+    origin_route.id = "O",
     id.col = "id",
     dist_threshold = 500,
     attribute_trips = c("bicycle_godutch",
@@ -417,7 +417,7 @@ match_centroids = function(
   
   
   
-  key_vector = oringin_route.id
+  key_vector = origin_route.id
   names(key_vector) <- origin.id
   
   cents = dplyr::inner_join(

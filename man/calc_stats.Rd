@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{calc_stats}
 \alias{calc_stats}
-\title{Title}
+\title{Calculate route statistics for bike bus planning}
 \usage{
 calc_stats(
   routes,
@@ -14,18 +14,29 @@ calc_stats(
 )
 }
 \arguments{
-\item{routes}{}
+\item{routes}{An sf object with individual routes}
 
-\item{rnet_plan}{}
+\item{rnet_plan}{Route network from routes_network()}
 
-\item{ordered_routes}{}
+\item{ordered_routes}{Prioritized routes from cycle_bus_routes()}
 
-\item{attribute_trips}{}
+\item{attribute_trips}{Attribute for filtering: "bicycle_godutch", "quietness", or "gradient_smooth"}
 
-\item{min_trips}{}
+\item{min_trips}{Minimum threshold for network filtering. Default: 0}
 
-\item{buffer}{}
+\item{buffer}{Buffer distance (meters) for spatial operations. Default: 10}
+}
+\value{
+An sf object with route statistics including full_length, bike_bus_length, dist_to_bike_bus
 }
 \description{
-Title
+Computes statistics for routes intersecting with bike bus corridors,
+including full route length, bike bus segment length, and distance metrics.
+}
+\examples{
+\dontrun{
+rnet <- routes_network(routes_almada, "bicycle_godutch")
+bike_routes <- cycle_bus_routes(routes_almada, rnet)
+stats <- calc_stats(routes_almada, rnet, bike_routes)
+}
 }

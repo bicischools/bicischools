@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{routes_network}
 \alias{routes_network}
-\title{Title}
+\title{Create route network by overlaying individual routes}
 \usage{
 routes_network(
   routes,
@@ -11,12 +11,21 @@ routes_network(
 )
 }
 \arguments{
-\item{routes}{}
+\item{routes}{An sf object with route geometries}
 
-\item{attribute_trips}{}
+\item{attribute_trips}{Attribute to process: "bicycle_godutch", "quietness", or "gradient_smooth"}
 
-\item{trips.col}{}
+\item{trips.col}{Column name(s) for trip counts. Auto-detected by default.}
+}
+\value{
+An sf object with aggregated route network
 }
 \description{
-Title
+Aggregates overlapping routes using stplanr::overline to create a network.
+Sums bicycle_godutch values, averages other attributes.
+}
+\examples{
+\dontrun{
+network <- routes_network(routes_almada, "bicycle_godutch")
+}
 }

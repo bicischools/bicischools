@@ -2,7 +2,7 @@
 % Please edit documentation in R/routes_processing.R
 \name{match_centroids}
 \alias{match_centroids}
-\title{Title}
+\title{Match origin centroids to bike bus routes}
 \usage{
 match_centroids(
   routes_cents,
@@ -10,31 +10,45 @@ match_centroids(
   route_stats,
   origins,
   origin.id = names(origins)[1],
-  oringin_route.id = "O",
+  origin_route.id = "O",
   id.col = "id",
   dist_threshold = 500,
   attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth")
 )
 }
 \arguments{
-\item{routes_cents}{}
+\item{routes_cents}{An sf object with candidate routes}
 
-\item{top_routes}{}
+\item{top_routes}{An sf object with selected top routes}
 
-\item{route_stats}{}
+\item{route_stats}{Route statistics from calc_stats()}
 
-\item{origins}{}
+\item{origins}{An sf object with origin points/zones}
 
-\item{origin.id}{}
+\item{origin.id}{Column name for origin ID in origins data. Auto-detected by default.}
 
-\item{oringin_route.id}{}
+\item{origin_route.id}{Column name for origin ID in route data. Default: "O"}
 
-\item{id.col}{}
+\item{id.col}{Column name for route ID. Default: "id"}
 
-\item{dist_threshold}{}
+\item{dist_threshold}{Maximum distance (meters) for matching. Default: 500}
 
-\item{attribute_trips}{}
+\item{attribute_trips}{Attribute for processing: "bicycle_godutch", "quietness", or "gradient_smooth"}
+}
+\value{
+An sf object with origins matched to their assigned bike bus routes
 }
 \description{
-Title
+Assigns origin points to their nearest bike bus routes within a distance
+threshold, creating a mapping between residential areas and route services.
+}
+\examples{
+\dontrun{
+# Complete workflow
+rnet <- routes_network(routes_almada, "bicycle_godutch")
+bike_routes <- cycle_bus_routes(routes_almada, rnet)
+top_routes <- filter_routes(bike_routes, top_n = 3)
+stats <- calc_stats(routes_almada, rnet, bike_routes)
+matched <- match_centroids(bike_routes, top_routes, stats, origins_lisbon)
+}
 }
