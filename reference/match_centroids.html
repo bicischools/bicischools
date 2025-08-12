@@ -48,7 +48,8 @@ threshold, creating a mapping between residential areas and route services.</p>
 <span>  origin.id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">origins</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
 <span>  origin_route.id <span class="op">=</span> <span class="st">"O"</span>,</span>
 <span>  id.col <span class="op">=</span> <span class="st">"id"</span>,</span>
-<span>  dist_threshold <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>  max_dist_to_bikebus <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  min_dist_threshold <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>  attribute_trips <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bicycle_godutch"</span>, <span class="st">"quietness"</span>, <span class="st">"gradient_smooth"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -85,8 +86,12 @@ threshold, creating a mapping between residential areas and route services.</p>
 <dd><p>Column name for route ID. Default: "id"</p></dd>
 
 
-<dt id="arg-dist-threshold">dist_threshold<a class="anchor" aria-label="anchor" href="#arg-dist-threshold"></a></dt>
-<dd><p>Maximum distance (meters) for matching. Default: 500</p></dd>
+<dt id="arg-max-dist-to-bikebus">max_dist_to_bikebus<a class="anchor" aria-label="anchor" href="#arg-max-dist-to-bikebus"></a></dt>
+<dd><p>a buffer distance to assign the route to a bike bus</p></dd>
+
+
+<dt id="arg-min-dist-threshold">min_dist_threshold<a class="anchor" aria-label="anchor" href="#arg-min-dist-threshold"></a></dt>
+<dd><p>the minimum total trip distance to be included in a bike bus</p></dd>
 
 
 <dt id="arg-attribute-trips">attribute_trips<a class="anchor" aria-label="anchor" href="#arg-attribute-trips"></a></dt>
