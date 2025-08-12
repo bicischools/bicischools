@@ -40,37 +40,26 @@ routes_pct_uptake <- function(routes,
 #' Sums bicycle_godutch values, averages other attributes.
 #'
 #' @param routes An sf object with route geometries
-#' @param attribute_trips Attribute to process: "bicycle_godutch", "quietness", or "gradient_smooth"
-#' @param trips.col Column name(s) for trip counts. Auto-detected by default.
+#' @param trips.col Column name for trip counts. Auto-detected by default.
 #'
 #' @return An sf object with aggregated route network
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' network <- routes_network(routes_almada, "bicycle_godutch")
+#' network <- routes_network(routes_almada)
 #' }
+
 routes_network <- function(routes,
-                           attribute_trips = c("bicycle_godutch",
-                                               "quietness",
-                                               "gradient_smooth"),
                            trips.col = names(routes)[grep("trip", names(routes))]){
   
-  attribute_trips <- match.arg(attribute_trips)
+  attribute_trips <- c("quietness", "gradient_smooth")
   
-  if (attribute_trips == "bicycle_godutch"){
-  rnet <- routes |>
-    stplanr::overline(
-      attrib = c(
-        trips.col,
-        attribute_trips
-      ),
-      fun = sum
-    )
-    
-  }else{
+  trips.col <- c(trips.col,"bicycle_godutch")
+  
     summary.trips.col <- paste0(trips.col,"_sum")
     summary.attribute_trips.col <- paste0(attribute_trips,"_mean")
+    
     rnet <- routes |>
       stplanr::overline(
         attrib = c(
@@ -81,11 +70,13 @@ routes_network <- function(routes,
       ) |> 
       dplyr::select(dplyr::any_of(c(summary.trips.col,summary.attribute_trips.col)))
     
-    names(rnet)[names(rnet) == summary.trips.col] <- trips.col
-    names(rnet)[names(rnet) == summary.attribute_trips.col] <- attribute_trips
+    names(rnet)[names(rnet) %in% summary.trips.col] <- trips.col
+    names(rnet)[names(rnet) %in% summary.attribute_trips.col] <- attribute_trips
     
+    if(any(names(rnet) == "gradient_smooth")){
+      rnet$gradient_smooth <- round(rnet$gradient_smooth*100)
     }
-  
+    
   rnet
   }
 
@@ -125,9 +116,9 @@ summarise_routes <- function(routes,
   routes |>
     dplyr::group_by(
       dplyr::across(
-        dplyr::all_of(c(id_route.col,
-                      origin.col,
+        dplyr::all_of(c(origin.col,
                       destination.col,
+                      id_route.col,
                       trips.col,
                       attribute_trips,
                       length.col)))) |>
@@ -342,7 +333,8 @@ filter_routes <- function(routes,
 #' @param origin.id Column name for origin ID in origins data. Auto-detected by default.
 #' @param origin_route.id Column name for origin ID in route data. Default: "O"
 #' @param id.col Column name for route ID. Default: "id"
-#' @param dist_threshold Maximum distance (meters) for matching. Default: 500
+#' @param max_dist_to_bikebus a buffer distance to assign the route to a bike bus
+#' @param min_dist_threshold the minimum total trip distance to be included in a bike bus
 #' @param attribute_trips Attribute for processing: "bicycle_godutch", "quietness", or "gradient_smooth"
 #'
 #' @return An sf object with origins matched to their assigned bike bus routes
@@ -365,12 +357,15 @@ match_centroids = function(
     origin.id = names(origins)[1],
     origin_route.id = "O",
     id.col = "id",
-    dist_threshold = 500,
+    max_dist_to_bikebus = 30,
+    min_dist_threshold = 500,
     attribute_trips = c("bicycle_godutch",
                         "quietness",
                         "gradient_smooth")) {
   
   attribute_trips <- match.arg(attribute_trips)
+  
+  attribute_trips_x_distance = paste0(attribute_trips, "_x_distance")
   
   
   # Remove top routes to avoid duplicate matching in subsequent processing
@@ -379,17 +374,20 @@ match_centroids = function(
   routes_cents_clean$pick = 0
   
   routes_cents_initial_point <- routes_cents_clean |>
-    sf::st_cast( "POINT") |> 
-    dplyr::slice_head(n = 1,by = dplyr::all_of(id.col))
+    sf::st_cast("POINT") |> 
+    dplyr::slice_head(n = 1,by = dplyr::all_of(id.col)) |> 
+    tidyr::drop_na()
   
-  dist_matrix <- routes_cents_clean |> 
+  dist_matrix <- routes_cents_initial_point |> 
     sf::st_distance(top_routes)  
   
   index_closest <- apply(dist_matrix,1,which.min)
   
   mindist_closest <- apply(dist_matrix,1,min)
   
-  index_closest[mindist_closest>dist_threshold] <- 0
+  index_closest[mindist_closest>max_dist_to_bikebus] <- 0
+  
+  routes_cents_clean$distance_bb <- mindist_closest
   
   routes_cents_clean$pick <- index_closest
   
@@ -405,16 +403,16 @@ match_centroids = function(
   top_cents = dplyr::inner_join(
     route_stats,
     routes_both |> sf::st_drop_geometry(),
-    by = id.col
+    by = c(id.col,attribute_trips_x_distance)
   )
   
   # remove routes shorter than dist_threshold or where less than half of the distance is on the bike bus
   top_cents = top_cents |>
     dplyr::filter(
-      .data$full_length > dist_threshold,
+      .data$full_length > min_dist_threshold,
       .data$bike_bus_length > .data$dist_to_bike_bus
     ) |> 
-    dplyr::select(-dplyr::any_of(origin.id))
+    dplyr::select(-dplyr::any_of(id.col))
   
   
   
@@ -422,7 +420,7 @@ match_centroids = function(
   names(key_vector) <- origin.id
   
   cents = dplyr::inner_join(
-    origins,
+    origins |> dplyr::select(dplyr::any_of(origin_route.id)),
     top_cents |> sf::st_drop_geometry(),
     by = key_vector
   )

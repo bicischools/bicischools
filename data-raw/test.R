@@ -154,10 +154,26 @@ centroids <- match_centroids(routes_cents = ordered_routes,
                              attribute_trips = "bicycle_godutch")
   
 
+top_routes |>
+  mutate(id = as.character(id)) |>
+  filter(id == "126") |> 
+  tm_shape()+
+  tm_lines("id")+
+  tm_shape(schools_lisbon)+
+  tm_dots("red")
+
+
+ordered_routes |> 
+  tm_shape()+
+  tm_lines()+
+  tm_shape(schools_lisbon)+
+  tm_dots("red")
 
 
 
 
+tm_shape(centroids)+
+  tm_bubbles(fill = "pick")
 
 
 

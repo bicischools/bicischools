@@ -4,18 +4,12 @@
 \alias{routes_network}
 \title{Create route network by overlaying individual routes}
 \usage{
-routes_network(
-  routes,
-  attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth"),
-  trips.col = names(routes)[grep("trip", names(routes))]
-)
+routes_network(routes, trips.col = names(routes)[grep("trip", names(routes))])
 }
 \arguments{
 \item{routes}{An sf object with route geometries}
 
-\item{attribute_trips}{Attribute to process: "bicycle_godutch", "quietness", or "gradient_smooth"}
-
-\item{trips.col}{Column name(s) for trip counts. Auto-detected by default.}
+\item{trips.col}{Column name for trip counts. Auto-detected by default.}
 }
 \value{
 An sf object with aggregated route network
@@ -26,6 +20,6 @@ Sums bicycle_godutch values, averages other attributes.
 }
 \examples{
 \dontrun{
-network <- routes_network(routes_almada, "bicycle_godutch")
+network <- routes_network(routes_almada)
 }
 }

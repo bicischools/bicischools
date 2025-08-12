@@ -12,7 +12,8 @@ match_centroids(
   origin.id = names(origins)[1],
   origin_route.id = "O",
   id.col = "id",
-  dist_threshold = 500,
+  max_dist_to_bikebus = 30,
+  min_dist_threshold = 500,
   attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth")
 )
 }
@@ -31,7 +32,9 @@ match_centroids(
 
 \item{id.col}{Column name for route ID. Default: "id"}
 
-\item{dist_threshold}{Maximum distance (meters) for matching. Default: 500}
+\item{max_dist_to_bikebus}{a buffer distance to assign the route to a bike bus}
+
+\item{min_dist_threshold}{the minimum total trip distance to be included in a bike bus}
 
 \item{attribute_trips}{Attribute for processing: "bicycle_godutch", "quietness", or "gradient_smooth"}
 }
