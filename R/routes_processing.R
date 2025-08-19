@@ -349,6 +349,7 @@ filter_routes <- function(routes,
 #' stats <- calc_stats(routes_almada, rnet, bike_routes)
 #' matched <- match_centroids(bike_routes, top_routes, stats, origins_lisbon)
 #' }
+
 match_centroids = function(
     routes_cents,
     top_routes,
