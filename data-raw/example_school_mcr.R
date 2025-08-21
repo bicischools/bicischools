@@ -141,7 +141,7 @@ assign(paste0("routes_", plan, "_all"), routes_plan)
 routes_plan = routes_plan |>
   filter(length < 5000)
 assign(x = paste0("routes_", plan), value = routes_plan)
-saveRDS(routes_plan, paste0("./data/routes-", plan, "-manchester.Rds"))
+saveRDS(routes_plan, paste0("./data-raw/routes-", plan, "-manchester.Rds"))
 
 
 routes_plan_all = get(paste0("routes_", plan, "_all"))
@@ -186,17 +186,17 @@ rnet_plan = rnet_plan_raw |>
   )
 assign(x = paste0("rnet_", plan), value = rnet_plan)
 
-tm_shape(rnet_quietest) +
-  tm_lines(
-    "bicycle_godutch",
-    palette = "viridis",
-    lwd = 2,
-    breaks = c(0, 5, 10, 100)
-  ) +
-  tm_shape(centroids_5km) +
-  tm_bubbles("trips") +
-  tm_shape(school) +
-  tm_bubbles(col = "green")
+# tm_shape(rnet_quietest) +
+#   tm_lines(
+#     "bicycle_godutch",
+#     palette = "viridis",
+#     lwd = 2,
+#     breaks = c(0, 5, 10, 100)
+#   ) +
+#   tm_shape(centroids_5km) +
+#   tm_bubbles("trips") +
+#   tm_shape(school) +
+#   tm_bubbles(col = "green")
 
 quietness_breaks = c(0, 25, 50, 75, 100)
 pal = c('#882255', '#CC6677', '#44AA99', '#117733')
