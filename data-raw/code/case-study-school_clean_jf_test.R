@@ -67,7 +67,6 @@ centroids_5km = zone_centroids |>
   filter(desire_line_length < 5000)
 
 
-
 saveRDS(centroids_5km, "data-raw/centroids_5km.Rds")
 centroids_5km = readRDS("data-raw/centroids_5km.Rds")
 
@@ -87,7 +86,6 @@ od_5km = od_5km |>
 library(stplanr)
 # plan = "quiet"
 plans = c("quiet")
-
 
 
 ## 0 Routing -----------------------------------------------------------------
@@ -118,19 +116,19 @@ for (plan in plans) {
   routes_plan = routes_plan |>
     filter(length < 5000)
   assign(x = paste0("routes_", plan), value = routes_plan)
-  rm(routes_plan,location,routes_plan_location)
+  rm(routes_plan, location, routes_plan_location)
 }
 
 
 # routes_quiet_pkg <- bici_routes(od_5km,trips.col = "n_students",distance.threshold = 5e3)
-# 
+#
 # saveRDS(routes_quiet_pkg,"data-raw/routes_quiet_pkg.rds")
 routes_quiet_pkg <- readRDS("data-raw/routes_quiet_pkg.rds")
 
 
 plot(routes_quiet$geometry, lwd = 3, reset = T)
 
-plot(routes_quiet_pkg$geometry,col = "red",alpha = 0.3,add = T)
+plot(routes_quiet_pkg$geometry, col = "red", alpha = 0.3, add = T)
 
 
 # median desire line length for all students living within 5km euclidean distance of the school
@@ -141,7 +139,6 @@ library(matrixStats)
 library(pct)
 
 ## 1 uptake -----------------------------------------------------------------
-
 
 for (plan in plans) {
   routes_plan = get(x = paste0("routes_", plan))
@@ -173,17 +170,20 @@ for (plan in plans) {
       gradient = round(gradient_smooth_mean * 100)
     )
   assign(x = paste0("rnet_", plan), value = rnet_plan)
-  rm(routes_plan,rnet_plan,rnet_plan_raw,routes_plan_pct)
+  rm(routes_plan, rnet_plan, rnet_plan_raw, routes_plan_pct)
 }
 
-routes_quiet_pct_pkg <- routes_pct_uptake(routes_quiet_pkg,trips.col = "n_students")
+routes_quiet_pct_pkg <- routes_pct_uptake(
+  routes_quiet_pkg,
+  trips.col = "n_students"
+)
 
-rnet_quiet_pkg <- routes_network(routes_quiet_pct_pkg,trips.col = "n_students")
+rnet_quiet_pkg <- routes_network(routes_quiet_pct_pkg, trips.col = "n_students")
 
 
 plot(rnet_quiet$geometry)
 
-plot(rnet_quiet_pkg$geometry,col = "red",alpha = 0.3,add = T)
+plot(rnet_quiet_pkg$geometry, col = "red", alpha = 0.3, add = T)
 
 # Explore results ---------------------------------------------------------
 
@@ -197,17 +197,19 @@ for (plan in plans) {
     summarise() |>
     ungroup()
   assign(paste0("route_summaries_", plan), route_summaries)
-  rm(routes_plan_pct,route_summaries)
+  rm(routes_plan_pct, route_summaries)
 }
 
-route_summaries_quiet_pkg <- summarise_routes(routes_quiet_pct_pkg,
-                                              origin.col = "OBJECTID",
-                                              trips.col = "n_students",
-                                              destination.col = "DTMN21")
+route_summaries_quiet_pkg <- summarise_routes(
+  routes_quiet_pct_pkg,
+  origin.col = "OBJECTID",
+  trips.col = "n_students",
+  destination.col = "DTMN21"
+)
 
 plot(route_summaries_quiet$geometry)
 
-plot(route_summaries_quiet_pkg$geometry,col = "red",alpha = 0.3,add = T)
+plot(route_summaries_quiet_pkg$geometry, col = "red", alpha = 0.3, add = T)
 
 
 # Bundling function -------------------------------------------------------
@@ -222,7 +224,6 @@ cycle_bus_routes = function(
   attribute_trips = "bicycle_godutch",
   buffer = 10
 ) {
-  
   rnet_subset = rnet[rnet[[attribute_trips]] > min_trips, ]
   rnet_subset$length = sf::st_length(rnet_subset) |>
     as.numeric()
@@ -256,7 +257,6 @@ cycle_bus_routes = function(
 
 ## 3 ordered routes -----------------------------------------------------------------
 
-
 # Get all routes within min_trips rnet, ordered by length*mean_godutch
 ordered_routes_quiet = cycle_bus_routes(
   routes = route_summaries_quiet,
@@ -266,28 +266,31 @@ ordered_routes_quiet = cycle_bus_routes(
   buffer = 10
 )
 
-ordered_routes_quiet_test <- bicischools::cycle_bus_routes(routes = route_summaries_quiet,
-                                                          rnet = rnet_quiet,
-                                                          min_trips = 3,
-                                                          trips.col = "n_students",
-                                                          buffer = 10,
-                                                          attribute_trips = "bicycle_godutch")
+ordered_routes_quiet_test <- bicischools::cycle_bus_routes(
+  routes = route_summaries_quiet,
+  rnet = rnet_quiet,
+  min_trips = 3,
+  trips.col = "n_students",
+  buffer = 10,
+  attribute_trips = "bicycle_godutch"
+)
 
 
-ordered_routes_quiet_pkg <- bicischools::cycle_bus_routes(routes = route_summaries_quiet_pkg,
-                                                          rnet = rnet_quiet_pkg,
-                                                          min_trips = 3,
-                                                          trips.col = "n_students",
-                                                          buffer = 10,
-                                                          attribute_trips = "bicycle_godutch")
+ordered_routes_quiet_pkg <- bicischools::cycle_bus_routes(
+  routes = route_summaries_quiet_pkg,
+  rnet = rnet_quiet_pkg,
+  min_trips = 3,
+  trips.col = "n_students",
+  buffer = 10,
+  attribute_trips = "bicycle_godutch"
+)
 
 
-plot(ordered_routes_quiet$geometry,lwd = 3)
+plot(ordered_routes_quiet$geometry, lwd = 3)
 # plot(ordered_routes_quiet_pkg_test$geometry,col = "blue",alpha = 0.3,add = T)
-plot(ordered_routes_quiet_test$geometry,col = "yellow",add = T,lwd = 1.5)
+plot(ordered_routes_quiet_test$geometry, col = "yellow", add = T, lwd = 1.5)
 
-plot(ordered_routes_quiet_pkg$geometry,col = "red",add = T,lwd = 0.7)
-
+plot(ordered_routes_quiet_pkg$geometry, col = "red", add = T, lwd = 0.7)
 
 
 ## 4 Stats -----------------------------------------------------------------
@@ -317,7 +320,17 @@ for (plan in plans) {
     ) |>
     select(-length.x, -length.y)
   assign(paste0("route_stats_", plan), route_stats)
-  rm(route_stats,ordered_routes,rnet_buffer,rnet_union,rnet_subset,routes,rnet_plan,routes_crop,join)
+  rm(
+    route_stats,
+    ordered_routes,
+    rnet_buffer,
+    rnet_union,
+    rnet_subset,
+    routes,
+    rnet_plan,
+    routes_crop,
+    join
+  )
 }
 
 route_stats_quiet_pkg <- calc_stats(
@@ -325,24 +338,25 @@ route_stats_quiet_pkg <- calc_stats(
   rnet_plan = rnet_quiet_pkg,
   ordered_routes = ordered_routes_quiet_pkg,
   min_trips = 3,
-  buffer = 10)
+  buffer = 10
+)
 
 route_stats_quiet_test <- calc_stats(
   routes = route_summaries_quiet,
   rnet_plan = rnet_quiet,
   ordered_routes = ordered_routes_quiet,
   min_trips = 3,
-  buffer = 10)
+  buffer = 10
+)
 
 
-plot(route_stats_quiet$geometry,lwd = 3)
+plot(route_stats_quiet$geometry, lwd = 3)
 # plot(ordered_routes_quiet_pkg_test$geometry,col = "blue",alpha = 0.3,add = T)
-plot(route_stats_quiet_test$geometry,col = "yellow",add = T,lwd = 1.5)
+plot(route_stats_quiet_test$geometry, col = "yellow", add = T, lwd = 1.5)
 
-plot(route_stats_quiet_pkg$geometry,col = "red",add = T,lwd = 0.7)
+plot(route_stats_quiet_pkg$geometry, col = "red", add = T, lwd = 0.7)
 
 ## 5 Filtering  -----------------------------------------------------------------
-
 
 # routes = ordered_routes_quiet
 
@@ -384,18 +398,20 @@ top_routes_quiet = filter_routes(
 top_routes_quiet_pkg <- bicischools::filter_routes(
   routes = ordered_routes_quiet_pkg,
   buffer = 300,
-  top_n = 3)
+  top_n = 3
+)
 
 top_routes_quiet_test <- bicischools::filter_routes(
   routes = ordered_routes_quiet,
   buffer = 300,
-  top_n = 3)
+  top_n = 3
+)
 
-plot(top_routes_quiet$geometry,lwd = 3)
+plot(top_routes_quiet$geometry, lwd = 3)
 # plot(ordered_routes_quiet_pkg_test$geometry,col = "blue",alpha = 0.3,add = T)
-plot(top_routes_quiet_test$geometry,col = "yellow",add = T,lwd = 1.5)
+plot(top_routes_quiet_test$geometry, col = "yellow", add = T, lwd = 1.5)
 
-plot(top_routes_quiet_pkg$geometry,col = "red",add = T,lwd = 0.7)
+plot(top_routes_quiet_pkg$geometry, col = "red", add = T, lwd = 0.7)
 
 
 # Matching centroids to routes --------------------------------------------
@@ -459,10 +475,11 @@ match_centroids = function(
   cents
 }
 
-cents_quiet = match_centroids(routes_cents = ordered_routes_quiet,
-                              top_routes = top_routes_quiet,
-                              route_stats = route_stats_quiet,
-                              centroids_5km
+cents_quiet = match_centroids(
+  routes_cents = ordered_routes_quiet,
+  top_routes = top_routes_quiet,
+  route_stats = route_stats_quiet,
+  centroids_5km
 )
 
 cents_quiet_pkg <- bicischools::match_centroids(
@@ -476,7 +493,7 @@ cents_quiet_pkg <- bicischools::match_centroids(
   origin.id = "OBJECTID",
   origin_route.id = "OBJECTID",
   attribute_trips = "bicycle_godutch"
-  )
+)
 
 cents_quiet_test <- bicischools::match_centroids(
   routes_cents = ordered_routes_quiet,
@@ -491,22 +508,23 @@ cents_quiet_test <- bicischools::match_centroids(
   attribute_trips = "bicycle_godutch"
 )
 
-tm_shape(cents_quiet)+
-  tm_dots("pick")+
-  tm_shape(top_routes_quiet |> mutate(id = factor(id)))+
+tm_shape(cents_quiet) +
+  tm_dots("pick") +
+  tm_shape(top_routes_quiet |> mutate(id = factor(id))) +
   tm_lines("id")
 
-tm_shape(cents_quiet_test)+
-  tm_dots("pick")+
-  tm_shape(top_routes_quiet_test |>
-             mutate(id = factor(id)))+
+tm_shape(cents_quiet_test) +
+  tm_dots("pick") +
+  tm_shape(
+    top_routes_quiet_test |>
+      mutate(id = factor(id))
+  ) +
   tm_lines("id")
 
-tm_shape(cents_quiet_pkg)+
-  tm_dots("pick")+
-  tm_shape(top_routes_quiet_pkg |>
-             mutate(id = factor(id)))+
+tm_shape(cents_quiet_pkg) +
+  tm_dots("pick") +
+  tm_shape(
+    top_routes_quiet_pkg |>
+      mutate(id = factor(id))
+  ) +
   tm_lines("id")
-
-
-
