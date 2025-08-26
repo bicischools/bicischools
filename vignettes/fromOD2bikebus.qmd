@@ -66,10 +66,10 @@ Let's visualize the basic geography:
 ```{r}
 #| label: basic-map
 tm_shape(origins_almada) +
-    tm_borders(alpha = 0.5) +
-    tm_shape(schools_lisbon) +
-    tm_dots(col = "red", size = 0.1) +
-    tm_layout(title = "Origins and Schools in Almada")
+  tm_borders() +
+  tm_shape(schools_lisbon) +
+  tm_dots("red", size = 0.5) +
+  tm_title("Origins and Schools in Almada")
 ```
 
 ## 2. Origin-Destination Flow Simulation
@@ -82,17 +82,17 @@ For this example, we'll use pre-calculated OD data, but here's how you would gen
 
 # Example gravity model simulation (not run with sample data)
 results <- sim_schools(
-    origins = origins_almada,
-    destinations = schools_lisbon,
-    model = "gravity",
-    max_dist = 3000,
-    balancing = "destinations",
-    d = distance_euclidean,
-    m = origin_pupils,
-    n = destination_n_pupils,
-    constraint_production = origin_pupils,
-    beta = 0.99944,
-    keep_cols = TRUE
+  origins = origins_almada,
+  destinations = schools_lisbon,
+  model = "gravity",
+  max_dist = 3000,
+  balancing = "destinations",
+  d = distance_euclidean,
+  m = origin_pupils,
+  n = destination_n_pupils,
+  constraint_production = origin_pupils,
+  beta = 0.99944,
+  keep_cols = TRUE
 )
 ```
 
@@ -108,14 +108,14 @@ Generate cycling routes between origins and the selected school:
 
 # Visualize the routes
 tm_shape(origins_almada) +
-    tm_borders(alpha = 0.3) +
-    tm_shape(od_data_almada) +
-    tm_lines(col = "grey", alpha = 0.3) +
-    tm_shape(routes_almada) +
-    tm_lines(col = "dodgerblue", alpha = 0.6, lwd = 2) +
-    tm_shape(schools_lisbon) +
-    tm_dots(col = "red", size = 0.2) +
-    tm_layout(title = "Cycling Routes to School")
+  tm_borders() +
+  tm_shape(od_data_almada) +
+  tm_lines(col = "grey", col_alpha = 0.3) +
+  tm_shape(routes_almada) +
+  tm_lines(col = "dodgerblue", col_alpha = 0.6, lwd = 2) +
+  tm_shape(schools_lisbon) +
+  tm_dots("red", size = 0.5) +
+  tm_title("Cycling Routes to School")
 ```
 
 ## 4. Network Analysis and Cycling Uptake
@@ -142,15 +142,15 @@ Visualize the network with cycling potential:
 ```{r}
 #| label: network-map
 tm_shape(rnet) +
-    tm_lines(
-        col = "bicycle_godutch",
-        palette = "viridis",
-        lwd = 3,
-        title.col = "Potential Cyclists"
-    ) +
-    tm_shape(schools_lisbon) +
-    tm_dots(col = "red", size = 0.3) +
-    tm_layout(title = "Cycling Network with Uptake Potential")
+  tm_lines(
+    col = "bicycle_godutch",
+    col.scale = tm_scale(palette = "viridis"),
+    lwd = 3,
+    col.legend = tm_legend("Potential Cyclists")
+  ) +
+  tm_shape(schools_lisbon) +
+  tm_dots(col = "red", size = 0.3) +
+  tm_title("Cycling Network with Uptake Potential")
 ```
 
 ## 5. Bike Bus Route Identification
@@ -161,18 +161,18 @@ Identify optimal bike bus routes using the route bundling algorithm:
 #| label: bike-bus-routes
 # Generate ordered bike bus routes
 ordered_routes <- cycle_bus_routes(
-    routes_summaries,
-    rnet = rnet,
-    min_trips = 1,
-    buffer = 10
+  routes_summaries,
+  rnet = rnet,
+  min_trips = 1,
+  buffer = 10
 )
 
 # Calculate route statistics
 route_stats <- calc_stats(
-    routes = routes_summaries,
-    rnet_plan = rnet,
-    ordered_routes = ordered_routes,
-    min_trips = 1
+  routes = routes_summaries,
+  rnet_plan = rnet,
+  ordered_routes = ordered_routes,
+  min_trips = 1
 )
 
 # Filter to top routes
@@ -190,11 +190,11 @@ Match student origins to the top bike bus routes:
 #| label: centroid-matching
 # Match centroids to bike bus routes
 centroids <- match_centroids(
-    routes_cents = ordered_routes,
-    top_routes = top_routes,
-    route_stats = route_stats,
-    origins = origins_almada,
-    attribute_trips = "bicycle_godutch"
+  routes_cents = ordered_routes,
+  top_routes = top_routes,
+  route_stats = route_stats,
+  origins = origins_almada,
+  attribute_trips = "bicycle_godutch"
 )
 
 cat("Students assigned to bike bus routes:", nrow(centroids), "\n")
@@ -208,25 +208,25 @@ Create a comprehensive map showing the final bike bus network:
 #| label: final-map
 # Create final visualization
 tm_shape(origins_almada) +
-    tm_borders(alpha = 0.2) +
-    tm_shape(centroids) +
-    tm_bubbles(
-        col = "pick",
-        size = "bicycle_godutch",
-        palette = "Set1",
-        title.col = "Bike Bus Route",
-        title.size = "Potential Cyclists"
-    ) +
-    tm_shape(top_routes %>% mutate(route_id = as.character(row_number()))) +
-    tm_lines(
-        col = "route_id",
-        palette = "Set1",
-        lwd = 4,
-        title.col = "Bike Bus Routes"
-    ) +
-    tm_shape(schools_lisbon) +
-    tm_dots(col = "red", size = 0.5, shape = 17) +
-    tm_layout(title = "Optimized Bike Bus Routes for School Travel")
+  tm_borders(alpha = 0.2) +
+  tm_shape(centroids) +
+  tm_bubbles(
+    col = "pick",
+    size = "bicycle_godutch",
+    palette = "Set1",
+    title.col = "Bike Bus Route",
+    title.size = "Potential Cyclists"
+  ) +
+  tm_shape(top_routes %>% mutate(route_id = as.character(row_number()))) +
+  tm_lines(
+    col = "route_id",
+    palette = "Set1",
+    lwd = 4,
+    title.col = "Bike Bus Routes"
+  ) +
+  tm_shape(schools_lisbon) +
+  tm_dots(col = "red", size = 0.5, shape = 17) +
+  tm_layout(title = "Optimized Bike Bus Routes for School Travel")
 ```
 
 
