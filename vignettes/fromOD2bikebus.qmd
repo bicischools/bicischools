@@ -120,7 +120,7 @@ tm_shape(origins_almada) +
 
 ## 4. Network Analysis and Cycling Uptake
 
-Calculate potential cycling uptake using PCT models and create a route network:
+Calculate potential cycling uptake using Propensity to Cycle Tool ([PCT](https://github.com/itsleeds/pct)) models and create a route network:
 
 ```{r}
 #| label: uptake-network
