@@ -438,7 +438,7 @@ match_centroids = function(
   names(key_vector) <- origin.id
 
   cents = dplyr::inner_join(
-    origins |> dplyr::select(dplyr::any_of(origin_route.id)),
+    origins |> dplyr::select(dplyr::any_of(origin.id)),
     top_cents |> sf::st_drop_geometry(),
     by = key_vector
   )
