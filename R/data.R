@@ -53,6 +53,3 @@ NULL
 #' @format An sf object with X features and Y fields
 #' @source \url{http://somewhere.com/}
 NULL
-
-
-

@@ -23,19 +23,20 @@
 
 #'
 sim_schools <- function(
-    origins,
-    destinations,
-    model,
-    ...,
-    balancing = c("origins", "destinations", "both"),
-    max_dist = Inf,
-    origins.id = names(origins)[1],
-    origins.size = names(origins)[2],
-    destinations.id = names(destinations)[1],
-    destinations.size = names(destinations)[2],
-    keep_cols = FALSE,
-    output_col = "modelled_trips",
-    max_iter = 25) {
+  origins,
+  destinations,
+  model,
+  ...,
+  balancing = c("origins", "destinations", "both"),
+  max_dist = Inf,
+  origins.id = names(origins)[1],
+  origins.size = names(origins)[2],
+  destinations.id = names(destinations)[1],
+  destinations.size = names(destinations)[2],
+  keep_cols = FALSE,
+  output_col = "modelled_trips",
+  max_iter = 25
+) {
   # Checks
 
   ## crs check

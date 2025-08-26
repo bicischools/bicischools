@@ -1,0 +1,238 @@
+---
+title: "From Origin-Destination Data to Bike Bus Routes"
+vignette: >
+  %\VignetteIndexEntry{fromOD2bikebus}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: '#>'
+---
+
+```{r}
+#| eval: true
+#| include: false
+
+devtools::load_all()
+```
+
+This vignette demonstrates the complete workflow for generating bike bus routes from origin-destination data using the bicischools package. We'll walk through the process using data from Almada, Portugal, showing how to go from raw geographic data to optimised bike bus routes.
+
+## Setup
+
+```{r}
+#| label: setup
+#| message: false
+
+# library(bicischools)
+library(sf)
+library(tidyverse)
+library(tmap)
+# tmap_mode("view")
+```
+
+## Overview
+
+The workflow consists of several key steps:
+
+1. **Data Preparation**: Load and process geographic zones and school locations
+2. **Origin-Destination Simulation**: Use gravity models to estimate student trips
+3. **Route Generation**: Create cycling routes between origins and destinations  
+4. **Network Analysis**: Build route networks and calculate cycling uptake
+5. **Route Optimisation**: Identify and optimise bike bus routes
+6. **Visualisation**: Map results for analysis
+
+## 1. Data Preparation
+
+We'll use census zones (BGRI) as origins and schools as destinations. First, let's load the included sample data:
+
+```{r}
+#| label: load-data
+# Load sample data included with the package
+data("origins_almada")
+data("schools_lisbon")
+data("od_data_almada")
+data("routes_almada")
+
+# Display basic information
+cat("Number of origin zones:", nrow(origins_almada), "\n")
+cat("Number of schools:", nrow(schools_lisbon), "\n")
+cat("Number of OD pairs:", nrow(od_data_almada), "\n")
+```
+
+Let's visualise the basic geography:
+
+```{r}
+#| label: basic-map
+tm_shape(origins_almada) +
+    tm_borders() +
+    tm_shape(schools_lisbon) +
+    tm_dots("red", size = 0.5) +
+    tm_title("Origins and Schools in Almada")
+```
+
+## 2. Origin-Destination Flow Simulation
+
+For this example, we'll use pre-calculated OD data, but here's how you would generate it using a gravity model:
+
+```{r}
+#| label: gravity-model
+#| eval: false
+
+# Example gravity model simulation (not run with sample data)
+results <- sim_schools(
+    origins = origins_almada,
+    destinations = schools_lisbon,
+    model = "gravity",
+    max_dist = 3000,
+    balancing = "destinations",
+    d = distance_euclidean,
+    m = origin_pupils,
+    n = destination_n_pupils,
+    constraint_production = origin_pupils,
+    beta = 0.99944,
+    keep_cols = TRUE
+)
+```
+
+## 3. Route Generation
+
+Generate cycling routes between origins and the selected school:
+
+```{r}
+#| label: routes
+# The routes are already generated in our sample data
+# Here's how you would generate them:
+# routes_almada <- bici_routes(od_data_almada, distance.threshold = 5e3)
+
+# Visualise the routes
+tm_shape(origins_almada) +
+    tm_borders() +
+    tm_shape(od_data_almada) +
+    tm_lines(col = "grey", col_alpha = 0.3) +
+    tm_shape(routes_almada) +
+    tm_lines(col = "dodgerblue", col_alpha = 0.6, lwd = 2) +
+    tm_shape(schools_lisbon) +
+    tm_dots("red", size = 0.5) +
+    tm_title("Cycling Routes to School")
+```
+
+## 4. Network Analysis and Cycling Uptake
+
+Calculate potential cycling uptake using Propensity to Cycle Tool ([PCT](https://github.com/itsleeds/pct)) models and create a route network:
+
+```{r}
+#| label: uptake-network
+# Calculate cycling uptake potential
+routes_uptake <- routes_pct_uptake(routes_almada)
+
+# Create route network
+rnet <- routes_network(routes_uptake)
+
+# Summarise routes by origin
+routes_summaries <- summarise_routes(routes_uptake)
+
+cat("Routes with cycling potential:", nrow(routes_uptake), "\n")
+cat("Network segments:", nrow(rnet), "\n")
+```
+
+Visualise the network with cycling potential:
+
+```{r}
+#| label: network-map
+tm_shape(rnet) +
+    tm_lines(
+        col = "bicycle_godutch",
+        col.scale = tm_scale(palette = "viridis"),
+        lwd = 3,
+        col.legend = tm_legend("Potential Cyclists")
+    ) +
+    tm_shape(schools_lisbon) +
+    tm_dots(col = "red", size = 0.3) +
+    tm_title("Cycling Network with Uptake Potential")
+```
+
+## 5. Bike Bus Route Identification
+
+Identify optimal bike bus routes using the route bundling algorithm:
+
+```{r}
+#| label: bike-bus-routes
+# Generate ordered bike bus routes
+ordered_routes <- cycle_bus_routes(
+    routes_summaries,
+    rnet = rnet,
+    min_trips = 1,
+    buffer = 10
+)
+
+# Calculate route statistics
+route_stats <- calc_stats(
+    routes = routes_summaries,
+    rnet_plan = rnet,
+    ordered_routes = ordered_routes,
+    min_trips = 1
+)
+
+# Filter to top routes
+top_routes <- filter_routes(ordered_routes, buffer = 300, top_n = 3)
+
+cat("Total potential routes:", nrow(ordered_routes), "\n")
+cat("Top priority routes:", nrow(top_routes), "\n")
+```
+
+## 6. Centroid Matching and Final Selection
+
+Match student origins to the top bike bus routes:
+
+```{r}
+#| label: centroid-matching
+# Match centroids to bike bus routes
+centroids <- match_centroids(
+    routes_cents = ordered_routes,
+    top_routes = top_routes,
+    route_stats = route_stats,
+    origins = origins_almada,
+    id.col = "id",
+    origin_route.id = "O",
+    origin.id = "id",
+    attribute_trips = "bicycle_godutch",
+    max_dist_to_bikebus = 30,
+    min_dist_threshold = 500
+)
+
+cat("Students assigned to bike bus routes:", nrow(centroids), "\n")
+```
+
+## 7. Final Visualisation
+
+Create a comprehensive map showing the final bike bus network:
+
+```{r}
+#| label: final-map
+# Create final visualisation
+tm_shape(origins_almada) +
+    tm_borders(col_alpha = 0.2) +
+    tm_shape(centroids) +
+    tm_bubbles(
+        col = "pick",
+        size = "bicycle_godutch",
+        palette = "Set1",
+        title.col = "Bike Bus Route",
+        title.size = "Potential Cyclists"
+    ) +
+    tm_shape(top_routes %>% mutate(route_id = as.character(row_number()))) +
+    tm_lines(
+        col = "route_id",
+        palette = "Set1",
+        lwd = 4,
+        title.col = "Bike Bus Routes"
+    ) +
+    tm_shape(schools_lisbon) +
+    tm_dots(col = "red", size = 0.5, shape = 17) +
+    tm_title("Optimised Bike Bus Routes for School Travel")
+```
+
+
+

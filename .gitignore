@@ -54,3 +54,5 @@ docs
 
 .vscode/
 
+inst/doc
+**/.quarto/
