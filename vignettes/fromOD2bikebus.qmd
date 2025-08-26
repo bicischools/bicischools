@@ -11,7 +11,7 @@ knitr:
 ---
 
 ```{r}
-#| eval: false
+#| eval: true
 #| include: false
 
 devtools::load_all()
@@ -29,7 +29,7 @@ This vignette demonstrates the complete workflow for generating bike bus routes 
 library(sf)
 library(tidyverse)
 library(tmap)
-tmap_mode("view")
+# tmap_mode("view")
 ```
 
 ## Overview
