@@ -255,35 +255,42 @@ route_summaries = routes_pct |>
 
 # First function by Juan 
 ordered_routes = cycle_bus_routes(
-  routes = routes_pct,
-  rnet = rnet
+  routes = route_summaries,
+  rnet = rnet,
+  min_trips = 3,
+  buffer = 10,
+  attribute_trips = "bicycle_godutch"
   )
 
-buffer = 10
-attribute_trips = "bicycle_godutch"
-min_trips = 3
+tmap_mode("view")
+tm_shape(ordered_routes) + tm_lines()
 
-rnet_plan = get(paste0("rnet_", plan))
-routes = get(paste0("route_summaries_", plan))
+route_stats = calc_stats(
+  routes = route_summaries,
+  rnet_plan = rnet, 
+  ordered_routes = ordered_routes,
+  attribute_trips = "bicycle_godutch",
+  min_trips = 3
+)
 
-rnet_subset = rnet[rnet[[attribute_trips]] > min_trips, ]
-rnet_subset$length = sf::st_length(rnet_subset) |>
-  as.numeric()
-rnet_union = sf::st_union(rnet_subset)
-rnet_buffer = geo_buffer(rnet_union, dist = buffer)
-routes_crop = sf::st_intersection(routes, rnet_buffer)
-
-ordered_routes = ordered_routes
-join = sf::st_join(routes_crop, ordered_routes, join = st_equals)
-route_stats = join |>
-  mutate(
-    full_length = length.x,
-    bike_bus_length = length.y,
-    dist_to_bike_bus = length.x - length.y
-  ) |>
-  select(-length.x, -length.y)
-assign(paste0("route_stats_", plan), route_stats)
-
-
+# buffer = 10
+# attribute_trips = "bicycle_godutch"
+# min_trips = 3
+# 
+# rnet_subset = rnet[rnet[[attribute_trips]] > min_trips, ]
+# rnet_subset$length = sf::st_length(rnet_subset) |>
+#   as.numeric()
+# rnet_union = sf::st_union(rnet_subset)
+# rnet_buffer = geo_buffer(rnet_union, dist = buffer)
+# routes_crop = sf::st_intersection(route_summaries, rnet_buffer)
+# 
+# join = sf::st_join(routes_crop, ordered_routes, join = st_equals)
+# route_stats = join |>
+#   mutate(
+#     full_length = length.x,
+#     bike_bus_length = length.y,
+#     dist_to_bike_bus = length.x - length.y
+#   ) |>
+#   select(-length.x, -length.y)
 ```
 
