@@ -1,5 +1,5 @@
 ---
-title: "A Manchester case study"
+title: "manchester"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{manchester}
@@ -256,7 +256,11 @@ route_summaries = routes_pct |>
   group_by(id, route_number, trips, bicycle_godutch, length) |>
   summarise() |>
   ungroup()
+```
 
+We order the routes to find which can benefit the greatest number of students
+
+```{r}
 # First function by Juan 
 ordered_routes = cycle_bus_routes(
   routes = route_summaries,
@@ -298,4 +302,29 @@ route_stats = calc_stats(
 #   select(-length.x, -length.y)
 ```
 
+Remove routes with start points too close to other higher ranked routes
 
+```{r}
+selected_routes = nrow(routes)
+
+# this is slow
+top_routes = filter_routes(
+  routes = ordered_routes,
+  )
+
+tm_shape(top_routes) +
+  tm_lines() +
+  tm_shape(points) +
+  tm_bubbles()
+
+routes_cents = ordered_routes
+points = points |> 
+  mutate(id = seq.int(nrow(points)))
+
+# cents_quiet = match_centroids(
+#   ordered_routes,
+#   top_routes,
+#   route_stats,
+#   points
+# )
+```
