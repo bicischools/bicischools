@@ -1,5 +1,5 @@
 ---
-title: "manchester"
+title: "A Manchester case study"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{manchester}
@@ -16,7 +16,6 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(bicischools)
 library(tidyverse)
 library(osmactive)
 library(tmap)
@@ -26,7 +25,10 @@ library(stplanr)
 library(pct)
 ```
 
-This is for bike bus routes to Manley Park Primary School 
+This vignette demonstrates how to generate bike bus routes to Manley Park Primary School in Greater Manchester.
+We chose this school because an existing bike bus was set up at the school in 2025.
+
+First we define a catchment area for the school, based on local knowledge of where students live.
 
 ```{r}
 ## code to prepare `example_school_mcr` dataset goes here
@@ -42,22 +44,26 @@ zones = zonebuilder::zb_zone(
 study_area = sf::st_union(zones)
 
 mapview::mapview(zones)
+```
 
+We get speed limits for the local road network.
 
-
-
+```{r}
 osm_data = osmactive::get_travel_network(
     place = study_area,
     boundary = study_area,
     boundary_type = "clipsrc"
 )
 
-
-
 osm_drive = osmactive::get_driving_network(osm_data)
 
 mapview::mapview(osm_drive, zcol = "maxspeed")
+```
 
+
+We can now estimate cycle Level of Service across the local road network, based on speed limits and estimated traffic flows.
+
+```{r}
 # Get Level of Service
 
 cycle_net = osmactive::get_cycling_network(osm_data)
@@ -69,7 +75,11 @@ cycle_net$AADT = npt_to_cbd_aadt_numeric(cycle_net$assumed_volume)
 cycle_net = level_of_service(cycle_net)
 plot(cycle_net["Level of Service"])
 mapview::mapview(cycle_net["Level of Service"])
+```
 
+After some data cleaning, student home locations are randomly chosen within the defined school catchment.
+
+```{r}
 names(cycle_net)
 cycle_net_cols_to_keep = c(
   "osm_id",
@@ -100,7 +110,11 @@ centre = sf::st_centroid(zones)[1,]
 tm_shape(cycle_net_joined) + tm_lines() +
   tm_shape(points) + tm_dots(size = 1) +
   tm_shape(centre) + tm_dots(size = 2)
+```
 
+We extract the number of students at the school from a national schools dataset.
+
+```{r}
 # Get number of students
 # school_manc = osmextract::oe_get("College Road, Whalley Range, Manchester, M16 0AA")
 # number of pupils = 430
@@ -113,7 +127,12 @@ extract_students = function(school_name) {
   number_of_pupils = x$NumberOfPupils
 }
 n = extract_students(school_name)
+```
 
+Desire lines represent trips from home to school.
+<!-- These need fixing -->
+
+```{r}
 # Create desire lines
 od = points |>
   mutate(d = centre$geometry)
@@ -142,8 +161,11 @@ od_standard = st_as_sf(od_standard)
 
 # The desire lines still look strange!
 tm_shape(od_standard) + tm_lines()
+```
 
+We convert the desire lines into routes
 
+```{r}
 # Generate routes to school from these points
 # Create routes
 
