@@ -104,6 +104,9 @@ points = sf::st_sample(cycle_net_joined, size = 1000)
 points = st_as_sf(points)
 points = points |> 
   filter(!st_is_empty(points))
+points_single = points |> 
+  sf::st_cast("POINT")
+points = points_single
 
 centre = sf::st_centroid(zones)[1,]
 
@@ -175,25 +178,35 @@ We convert the desire lines into routes
 # Generate routes to school from these points
 # Create routes
 
-plan = "quietest"
+od_standard = od_standard |> 
+  mutate(origin = id,
+         destination = "d")
 
-routes_plan = stplanr::route(
-  l = od_standard,
-  route_fun = cyclestreets::journey,
-  plan = plan
-)
-tm_shape(routes_plan) + tm_lines("trips")
+routes = bici_routes(od.data = od_standard,
+                     origin.col = "origin",
+                     destination.col = "destination",
+                     distance.threshold = 3000
+                     )
 
-routes = routes_plan |>
-  group_by(route_number) |>
-  mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |>
-  ungroup()
-class(routes$route_number) = "character"
-class(routes$length) = "numeric"
-class(routes$quietness) = "numeric"
-assign("routes_all", routes)
-routes = routes |>
-  filter(length < 5000)
+# plan = "quietest"
+# 
+# routes_plan = stplanr::route(
+#   l = od_standard,
+#   route_fun = cyclestreets::journey,
+#   plan = plan
+# )
+# tm_shape(routes_plan) + tm_lines("trips")
+# 
+# routes = routes_plan |>
+#   group_by(route_number) |>
+#   mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |>
+#   ungroup()
+# class(routes$route_number) = "character"
+# class(routes$length) = "numeric"
+# class(routes$quietness) = "numeric"
+# assign("routes_all", routes)
+# routes = routes |>
+#   filter(length < 5000)
 saveRDS(routes, paste0("./data-raw/routes-manchester.Rds"))
 
 route_summaries = routes_all |>
@@ -324,10 +337,16 @@ points = points |>
   mutate(id = seq.int(nrow(points)))
 
 # Not working yet:
-# cents_quiet = match_centroids(
-#   ordered_routes,
-#   top_routes,
-#   route_stats,
-#   points
-# )
+cents_quiet = match_centroids(
+  routes_cents = routes_cents,
+  top_routes = top_routes,
+  route_stats = route_stats,
+  origins = points,
+  origin.id = "id",
+  origin_route.id = "O",
+  id.col = "id",
+  max_dist_to_bikebus = 30,
+  min_dist_threshold = 500,
+  attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth")
+)
 ```
