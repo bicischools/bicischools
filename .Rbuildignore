@@ -12,3 +12,7 @@
 ^schools_files
 ^data-raw$
 ^data-old$
+^vignettes/\.quarto$
+^vignettes/*_files$
+^\.vscode$
+^[.]?air[.]toml$

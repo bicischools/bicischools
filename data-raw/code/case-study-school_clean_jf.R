@@ -67,7 +67,6 @@ centroids_5km = zone_centroids |>
   filter(desire_line_length < 5000)
 
 
-
 saveRDS(centroids_5km, "data-raw/centroids_5km.Rds")
 centroids_5km = readRDS("data-raw/centroids_5km.Rds")
 
@@ -87,7 +86,6 @@ od_5km = od_5km |>
 library(stplanr)
 # plan = "quiet"
 plans = c("quiet", "fast")
-
 
 
 ## 0 Routing -----------------------------------------------------------------
@@ -118,7 +116,7 @@ for (plan in plans) {
   routes_plan = routes_plan |>
     filter(length < 5000)
   assign(x = paste0("routes_", plan), value = routes_plan)
-  rm(routes_plan,location,routes_plan_location)
+  rm(routes_plan, location, routes_plan_location)
 }
 
 
@@ -130,7 +128,6 @@ library(matrixStats)
 library(pct)
 
 ## 1 uptake -----------------------------------------------------------------
-
 
 for (plan in plans) {
   routes_plan = get(x = paste0("routes_", plan))
@@ -162,7 +159,7 @@ for (plan in plans) {
       gradient = round(gradient_smooth_mean * 100)
     )
   assign(x = paste0("rnet_", plan), value = rnet_plan)
-  rm(routes_plan,rnet_plan,rnet_plan_raw,routes_plan_pct)
+  rm(routes_plan, rnet_plan, rnet_plan_raw, routes_plan_pct)
 }
 
 
@@ -178,7 +175,7 @@ for (plan in plans) {
     summarise() |>
     ungroup()
   assign(paste0("route_summaries_", plan), route_summaries)
-  rm(routes_plan_pct,route_summaries)
+  rm(routes_plan_pct, route_summaries)
 }
 
 # Bundling function -------------------------------------------------------
@@ -193,7 +190,6 @@ cycle_bus_routes = function(
   attribute_trips = "bicycle_godutch",
   buffer = 10
 ) {
-  
   rnet_subset = rnet[rnet[[attribute_trips]] > min_trips, ]
   rnet_subset$length = sf::st_length(rnet_subset) |>
     as.numeric()
@@ -227,7 +223,6 @@ cycle_bus_routes = function(
 
 ## 3 ordered routes -----------------------------------------------------------------
 
-
 # Get all routes within min_trips rnet, ordered by length*mean_godutch
 ordered_routes_quiet = cycle_bus_routes(
   route_summaries_quiet,
@@ -243,7 +238,6 @@ ordered_routes_fast = cycle_bus_routes(
   attribute_trips = "bicycle_godutch",
   buffer = 10
 )
-
 
 
 ## 4 Stats -----------------------------------------------------------------
@@ -273,11 +267,20 @@ for (plan in plans) {
     ) |>
     select(-length.x, -length.y)
   assign(paste0("route_stats_", plan), route_stats)
-  rm(route_stats,ordered_routes,rnet_buffer,rnet_union,rnet_subset,routes,rnet_plan,routes_crop,join)
+  rm(
+    route_stats,
+    ordered_routes,
+    rnet_buffer,
+    rnet_union,
+    rnet_subset,
+    routes,
+    rnet_plan,
+    routes_crop,
+    join
+  )
 }
 
 ## 5 Filtering  -----------------------------------------------------------------
-
 
 # routes = ordered_routes_quiet
 
@@ -394,4 +397,3 @@ cents_fast = match_centroids(
   route_stats_fast,
   centroids_5km
 )
-
