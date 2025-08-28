@@ -120,6 +120,10 @@ We extract the number of students at the school from a national schools dataset.
 # number of pupils = 430
 
 school_name = "Manley Park Primary School"
+piggyback::pb_download(
+  file = "edubasealldata20250724.xlsx", 
+  tag = 0.1,
+  dest = "./data-raw")
 xlfile = "data-raw/edubasealldata20250724.xlsx"
 extract_students = function(school_name) {
   x = readxl::read_xlsx(xlfile)
@@ -293,4 +297,5 @@ route_stats = calc_stats(
 #   ) |>
 #   select(-length.x, -length.y)
 ```
+
 
