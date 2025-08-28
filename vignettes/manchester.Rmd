@@ -113,6 +113,8 @@ tm_shape(cycle_net_joined) + tm_lines() +
 ```
 
 We extract the number of students at the school from a national schools dataset.
+<!-- GIAS: (get information about schools) -->
+<!-- https://get-information-schools.service.gov.uk/Downloads/Generated/d74b2009-5571-496b-b102-c08765cb62f6 -->
 
 ```{r}
 # Get number of students
@@ -321,6 +323,7 @@ routes_cents = ordered_routes
 points = points |> 
   mutate(id = seq.int(nrow(points)))
 
+# Not working yet:
 # cents_quiet = match_centroids(
 #   ordered_routes,
 #   top_routes,
