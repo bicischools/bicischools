@@ -1,6 +1,6 @@
 ---
 title: "From Origin-Destination Data to Bike Bus Routes"
-author: "Juan Pablo Fonseca Zamorra, Joey Talbot and Robin Lovelace"
+author: "Juan Pablo Fonseca Zamora, Joey Talbot and Robin Lovelace"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{fromOD2bikebus}
