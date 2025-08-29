@@ -198,7 +198,7 @@ centroids <- match_centroids(
     origin_route.id = "O",
     origin.id = "id",
     attribute_trips = "bicycle_godutch",
-    max_dist_to_bikebus = 30,
+    max_dist_to_bikebus = 300,
     min_dist_threshold = 500
 )
 
