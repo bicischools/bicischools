@@ -12,7 +12,7 @@ match_centroids(
   origin.id = names(origins)[1],
   origin_route.id = "O",
   id.col = "id",
-  max_dist_to_bikebus = 30,
+  max_dist_to_bikebus = 300,
   min_dist_threshold = 500,
   attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth")
 )
