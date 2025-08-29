@@ -253,7 +253,7 @@ bici_routes <- function(
               route_hilliness = stats::weighted.mean(
                 .data$gradient_smooth,
                 .data$distances
-              )
+              ),.by = .data$route_number
             )
         }
       )

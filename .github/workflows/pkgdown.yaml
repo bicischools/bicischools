@@ -37,7 +37,9 @@ jobs:
           needs: website
 
       - uses: quarto-dev/quarto-actions/setup@v2
-        # Installs Quarto CLI for rendering qmd files
+
+      - name: Make Quarto available to R
+        run: echo "QUARTO_PATH=$(which quarto)" >> $GITHUB_ENV
 
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)

@@ -29,5 +29,7 @@ RoxygenNote: 7.3.2
 LazyData: true
 Suggests: 
     knitr,
-    quarto
-VignetteBuilder: quarto
+    markdown,
+    tidyverse,
+    tmap
+VignetteBuilder: knitr
