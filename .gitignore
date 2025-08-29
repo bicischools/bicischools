@@ -56,3 +56,5 @@ docs
 
 inst/doc
 **/.quarto/
+/doc/
+/Meta/
