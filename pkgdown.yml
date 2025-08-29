@@ -1,8 +1,9 @@
 pandoc: 3.1.11
 pkgdown: 2.1.3
 pkgdown_sha: ~
-articles: {}
-last_built: 2025-08-19T13:18Z
+articles:
+  fromOD2bikebus: fromOD2bikebus.html
+last_built: 2025-08-29T16:08Z
 urls:
   reference: https://bicischools.github.io/bicischools/reference
   article: https://bicischools.github.io/bicischools/articles
