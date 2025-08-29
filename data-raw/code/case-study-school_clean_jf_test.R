@@ -102,7 +102,6 @@ for (plan in plans) {
       route_fun = cyclestreets::journey,
       plan = plan_name
     )
-    browser()
     routes_plan = routes_plan |>
       group_by(route_number) |>
       mutate(route_hilliness = weighted.mean(gradient_smooth, distances)) |>
@@ -119,14 +118,19 @@ for (plan in plans) {
   rm(routes_plan, location, routes_plan_location)
 }
 
-
-# routes_quiet_pkg <- bici_routes(od_5km,trips.col = "n_students",distance.threshold = 5e3)
-#
-# saveRDS(routes_quiet_pkg,"data-raw/routes_quiet_pkg.rds")
-routes_quiet_pkg <- readRDS("data-raw/routes_quiet_pkg.rds")
+# This file will be saved in the releases '0.1'
 
 
-plot(routes_quiet$geometry, lwd = 3, reset = T)
+if(!file.exists("data-raw/routes_quiet_pkg.rds")){
+  routes_quiet_pkg <- bici_routes(od_5km,trips.col = "n_students", distance.threshold = 5e3)
+  saveRDS(routes_quiet_pkg,"data-raw/routes_quiet_pkg.rds")
+} else {
+  routes_quiet_pkg <- readRDS("data-raw/routes_quiet_pkg.rds")
+}
+
+
+
+plot(routes_quiet$geometry, lwd = 5, reset = T)
 
 plot(routes_quiet_pkg$geometry, col = "red", alpha = 0.3, add = T)
 
@@ -173,15 +177,18 @@ for (plan in plans) {
   rm(routes_plan, rnet_plan, rnet_plan_raw, routes_plan_pct)
 }
 
-routes_quiet_pct_pkg <- routes_pct_uptake(
-  routes_quiet_pkg,
-  trips.col = "n_students"
+routes_quiet_pct_pkg <- routes_pct_uptake(routes = routes_quiet_pkg,
+                                          trips.col = "n_students",
+                                          length.col = "length",
+                                          max.length = 30000,
+                                          hilliness.col = "route_hilliness"
 )
 
-rnet_quiet_pkg <- routes_network(routes_quiet_pct_pkg, trips.col = "n_students")
+rnet_quiet_pkg <- routes_network(routes = routes_quiet_pct_pkg,
+                                 trips.col = "n_students")
 
 
-plot(rnet_quiet$geometry)
+plot(rnet_quiet$geometry,lwd = 5)
 
 plot(rnet_quiet_pkg$geometry, col = "red", alpha = 0.3, add = T)
 
@@ -207,7 +214,7 @@ route_summaries_quiet_pkg <- summarise_routes(
   destination.col = "DTMN21"
 )
 
-plot(route_summaries_quiet$geometry)
+plot(route_summaries_quiet$geometry,lwd = 5)
 
 plot(route_summaries_quiet_pkg$geometry, col = "red", alpha = 0.3, add = T)
 
@@ -239,6 +246,7 @@ cycle_bus_routes = function(
   attribute_trips_x_distance = paste0(attribute_trips, "_x_distance")
   routes_subset[[attribute_trips_x_distance]] = NA
   class(routes_subset[[attribute_trips_x_distance]]) = "numeric"
+  
   for (i in 1:nrow(routes_subset)) {
     route_i = routes_subset[i, ]
     route_i_buffer = stplanr::geo_buffer(route_i, dist = buffer)
@@ -397,6 +405,7 @@ top_routes_quiet = filter_routes(
 
 top_routes_quiet_pkg <- bicischools::filter_routes(
   routes = ordered_routes_quiet_pkg,
+  attribute_trips = c("bicycle_godutch"),
   buffer = 300,
   top_n = 3
 )
@@ -487,8 +496,8 @@ cents_quiet_pkg <- bicischools::match_centroids(
   top_routes = top_routes_quiet_pkg,
   route_stats = route_stats_quiet_pkg,
   origins = centroids_5km,
-  max_dist_to_bikebus = 30,
-  min_dist_threshold = 400,
+  max_dist_to_bikebus = 15,
+  min_dist_threshold = 500,
   id.col = "id",
   origin.id = "OBJECTID",
   origin_route.id = "OBJECTID",
@@ -500,7 +509,7 @@ cents_quiet_test <- bicischools::match_centroids(
   top_routes = top_routes_quiet,
   route_stats = route_stats_quiet,
   origins = centroids_5km,
-  max_dist_to_bikebus = 15,
+  max_dist_to_bikebus = 305,
   min_dist_threshold = 500,
   id.col = "id",
   origin.id = "OBJECTID",

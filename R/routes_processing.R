@@ -173,7 +173,7 @@ cycle_bus_routes <- function(
 
   rnet_union <- sf::st_union(rnet_subset)
 
-  rnet_buffer <- sf::st_buffer(rnet_union, dist = buffer)
+  rnet_buffer <- stplanr::geo_buffer(rnet_union, dist = buffer)
 
   routes_crop <- sf::st_intersection(routes, rnet_buffer)
 
@@ -191,7 +191,8 @@ cycle_bus_routes <- function(
 
   class(routes_subset[[attribute_trips_x_distance]]) <- "numeric"
 
-  route_buffer <- sf::st_buffer(routes_subset, dist = buffer)
+  # Use stplanr::geo_buffer instead of sf::st_buffer to ensure correct buffering for geographic CRS and multi-part geometries.
+  route_buffer <- stplanr::geo_buffer(routes_subset, dist = buffer)
 
   routes_within <- sf::st_contains(route_buffer, rnet_subset)
 
@@ -214,7 +215,7 @@ cycle_bus_routes <- function(
   routes_subset[
     order(routes_subset[[attribute_trips_x_distance]], decreasing = FALSE),
   ]
-
+  
   # routes_subset[!is.nan(routes_subset[[attribute_trips_x_distance]]),]
 }
 
@@ -253,7 +254,7 @@ calc_stats <- function(
   rnet_subset$length = sf::st_length(rnet_subset) |>
     as.numeric()
   rnet_union = sf::st_union(rnet_subset)
-  rnet_buffer = sf::st_buffer(rnet_union, dist = buffer)
+  rnet_buffer = stplanr::geo_buffer(rnet_union, dist = buffer)
   routes_crop = sf::st_intersection(routes, rnet_buffer)
 
   join = sf::st_join(routes_crop, ordered_routes, join = sf::st_equals)
@@ -309,7 +310,8 @@ filter_routes <- function(
     invert = T
   )]
 
-  selected_routes = numeric(0)
+  # The route with the highest potential (last in the sorted) is always selected
+  selected_routes = nrow(routes)
 
   routes_sorted_initial_point <- routes_sorted |>
     sf::st_cast("POINT") |>
@@ -376,7 +378,7 @@ match_centroids = function(
   origin.id = names(origins)[1],
   origin_route.id = "O",
   id.col = "id",
-  max_dist_to_bikebus = 30,
+  max_dist_to_bikebus = 300,
   min_dist_threshold = 500,
   attribute_trips = c("bicycle_godutch", "quietness", "gradient_smooth")
 ) {
