@@ -118,6 +118,8 @@ for (plan in plans) {
   rm(routes_plan, location, routes_plan_location)
 }
 
+# This file will be saved in the releases '0.1'
+
 
 if(!file.exists("data-raw/routes_quiet_pkg.rds")){
   routes_quiet_pkg <- bici_routes(od_5km,trips.col = "n_students", distance.threshold = 5e3)
