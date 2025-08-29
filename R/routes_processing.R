@@ -191,7 +191,7 @@ cycle_bus_routes <- function(
 
   class(routes_subset[[attribute_trips_x_distance]]) <- "numeric"
 
-  # This is new code
+  # Use stplanr::geo_buffer instead of sf::st_buffer to ensure correct buffering for geographic CRS and multi-part geometries.
   route_buffer <- stplanr::geo_buffer(routes_subset, dist = buffer)
 
   routes_within <- sf::st_contains(route_buffer, rnet_subset)
